@@ -2,10 +2,10 @@
 FROM php:8.1-alpine AS php
 
 # copy only composer.json and composer.lock
-COPY composer.* /app/backend/
+COPY composer.* /app
 
 # set working directory
-WORKDIR /app/backend
+WORKDIR /app
 
 # install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
@@ -26,4 +26,4 @@ RUN addgroup -g 1000 www && adduser -u 1000 -G www -s /bin/sh -D www
 RUN chmod -R 777 /app/backend/storage
 
 # Change Permission
-RUN chown -R www:www /app/backend
+RUN chown -R www:www /app

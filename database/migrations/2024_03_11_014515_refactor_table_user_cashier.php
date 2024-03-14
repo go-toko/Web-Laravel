@@ -14,14 +14,38 @@ return new class extends Migration
     public function up()
     {
         Schema::table('user_cashier', function (Blueprint $table) {
-            $table->dropColumn('username');
-            $table->dropColumn('name');
-            $table->dropColumn('birthDate');
-            $table->dropColumn('gender');
-            $table->dropColumn('picture');
-            $table->dropColumn('address');
-            $table->dropColumn('phone');
-            $table->dropColumn('status');
+            // check if column exists 
+            if (Schema::hasColumn('user_cashier', 'username')) {
+                $table->dropColumn('username');
+            }
+
+            if (Schema::hasColumn('user_cashier', 'name')) {
+                $table->dropColumn('name');
+            }
+
+            if (Schema::hasColumn('user_cashier', 'birthDate')) {
+                $table->dropColumn('birthDate');
+            }
+
+            if(Schema::hasColumn('user_cashier', 'gender')) {
+                $table->dropColumn('gender');
+            }
+
+            if(Schema::hasColumn('user_cashier', 'picture')) {
+                $table->dropColumn('picture');
+            }
+
+            if(Schema::hasColumn('user_cashier', 'address')) {
+                $table->dropColumn('address');
+            }
+
+            if(Schema::hasColumn('user_cashier', 'phone')) {
+                $table->dropColumn('phone');
+            }
+
+            if(Schema::hasColumn('user_cashier', 'status')) {
+                $table->dropColumn('status');
+            }
         });
     }
 

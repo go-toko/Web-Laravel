@@ -15,13 +15,15 @@ class DashboardController extends Controller
     public function index()
     {
         $userId = Auth::user()->id;
-        $shops = ShopModel::where([['user_id', $userId], ['isActive', true]])->orderBy('created_at', 'desc');
+        
+        $shops = ShopModel::where([['user_id', $userId], ['isActive', 1]])->orderBy('created_at', 'desc');
         if (Session::has('active')) {
             $id = Crypt::decrypt(Session::get('active'));
             return view('page.owner.index', [
                 'shop' => $shops->where(['id' => $id])->first()
             ]);
         }
+
         return view('page.owner.index', [
             'shops' => $shops->get()
         ]);

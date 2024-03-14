@@ -1,4 +1,4 @@
-name: Production Pipeline
+name: Staging
 
 on:
   push:
@@ -6,33 +6,12 @@ on:
       - main
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Cache composer dependencies
-        uses: actions/cache@v3
-        with:
-          path: ./vendor
-          key: composer-${{ hashFiles('./composer.lock') }}
-
-      - name: "Install Composer Dependency"
-        uses: "php-actions/composer@v6"
-        with:
-          php_version: "8.1"
-
-      - name: "Build Images"
-        run: |
-          docker build -t radityafs/gotoko-web:latest .
-
-      - name: "Push Images"
-        run: |
-          echo ${{ secrets.DOCKER_HUB_PASSWORD }} | docker login -u radityafs --password-stdin
-          docker push radityafs/gotoko-web:latest
-
       - name: "Deploy to Jenkins"
         run: |
-          curl -X POST http://${{ secrets.JENKINS_USERNAME }}:${{ secrets.JENKINS_PASSWORD }}@${{ secrets.JENKINS_URL }}/job/gotoko-web/build?token=${{ secrets.JENKINS_TOKEN }}
+          curl http://${{ secrets.JENKINS_USERNAME }}:${{ secrets.JENKINS_PASSWORD }}@${{ secrets.JENKINS_URL }}/job/gotoko_web/build?token=${{ secrets.JENKINS_TOKEN }}

@@ -52,7 +52,7 @@ return new class extends Migration {
 
         Schema::table('sales', function (Blueprint $table) {
             $table->integer('total_item')->after('total_paid');
-            $table->enum('status', ['UNPAID', 'PAID', 'VOID'])->after('total_item');
+            $table->enum('status', ['UNPAID', 'PARTIAL_PAID', 'PAID','VOID'])->after('total_item');
             $table->enum('payment_method', ['CASH', 'QRIS'])->after('status');
         });
     }
@@ -64,29 +64,6 @@ return new class extends Migration {
      */
     public function down()
     {
-        // rollback
-        Schema::table('sales', function (Blueprint $table) {
-            $table->dropColumn('status');
-            $table->dropColumn('payment_method');
-            $table->dropColumn('total_item');
-        });
-        
-        //rename
-        Schema::table('sales', function (Blueprint $table) {
-            $table->renameColumn('total_bill', 'total');
-            $table->renameColumn('total_paid', 'paid');
-        });
 
-        Schema::table('sales', function (Blueprint $table) {
-            $table->string('date')->after('id');
-            $table->string('customer_name')->after('date');
-            $table->integer('total')->after('customer_name');
-            $table->integer('paid')->after('total');
-            $table->integer('change')->after('paid');
-            $table->enum('isActive', ['Y', 'N'])->after('change');
-            $table->enum('payment_status', ['UNPAID', 'PAID', 'VOID'])->after('isActive');
-            $table->enum('status', ['pending', 'success', 'failed'])->after('payment_status');
-            $table->string('payment_method')->after('status');
-        });
     }
 };

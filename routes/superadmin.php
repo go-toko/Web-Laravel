@@ -8,6 +8,9 @@ use App\Http\Controllers\Superadmin\Settings\MenuController;
 use App\Http\Controllers\Superadmin\Settings\SubmenuController;
 use App\Http\Controllers\Superadmin\Subscription\SubscriptionManagementController;
 use App\Http\Controllers\Superadmin\Subscription\SubscriptionOrderController;
+use App\Http\Controllers\Superadmin\Payment\PaymentManagementController;
+use App\Http\Controllers\Superadmin\Payment\PaymentTransactionController;
+use App\Http\Controllers\Superadmin\Payment\PaymentWithdrawalController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'superadmin', 'as' => 'superadmin.', 'middleware' => ['auth', 'role:superadmin']], function () {

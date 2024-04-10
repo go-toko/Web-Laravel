@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Socialite\Facades\Socialite;
 
 class LoginController extends Controller
@@ -74,7 +75,7 @@ class LoginController extends Controller
                         'email' => $user->email,
                         'google_id' => $user->id,
                         'role_id' => 2,
-                        'password' => encrypt('123456dummy'),
+                        'password' => Hash::make('123456dummy'),
                     ]);
 
                     UserProfileModel::create([

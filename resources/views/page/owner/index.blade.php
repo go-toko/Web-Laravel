@@ -81,28 +81,22 @@ $msg = Session::get($type);
     <script src="{{ URL::asset('/assets/plugins/toastr/toastr.min.js') }}"></script>
     <script src="{{ URL::asset('/assets/plugins/toastr/toastr.js') }}"></script>
 
-    <script>
-        let type = {!! json_encode($type) !!};
-        let msg = {!! json_encode($msg) !!};
-        const title = {!! json_encode($title) !!};
-        @if (Session::has($type))
-            {
-                toastr[type](msg, title, {
-                    closeButton: !0,
-                    tapToDismiss: !1,
-                    positionClass: 'toast-top-center',
-                })
-            }
-        @endif
-        // @if (Session::has('success'))
-        //     {
-        //         toastr.success("{!! Session::get('success') !!}", "Category", {
-        //             closeButton: !0,
-        //             tapToDismiss: !1,
-        //             positionClass: 'toast-top-center',
-        //         });
-        //     }
-        // @endif
-    </script>
+    @if ($type != null)
+        <script>
+            let type = {!! json_encode($type) !!};
+            let msg = {!! json_encode($msg) !!};
+            const title = {!! json_encode($title) !!};
+            toastr[type](msg, title)
+            // @if (Session::has('success'))
+            //     {
+            //         toastr.success("{!! Session::get('success') !!}", "Category", {
+            //             closeButton: !0,
+            //             tapToDismiss: !1,
+            //             positionClass: 'toast-top-center',
+            //         });
+            //     }
+            // @endif
+        </script>
+    @endif
 
 @endsection

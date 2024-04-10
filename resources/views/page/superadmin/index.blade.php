@@ -89,7 +89,7 @@
                                                             src="{{ isset($item->userProfile->picture) ? $item->userProfile->picture : asset('category/images/noimage.png') }}">
                                                     </div>
                                                 </td>
-                                                <td>{{ $item->userProfile->first_name . ' ' . $item->userProfile->last_name }}
+                                                <td>{{ $item->userProfile ? $item->userProfile->first_name . ' ' . $item->userProfile->last_name : $item->userCashierProfile->name }}
                                                     @if ($item->isSubscribe === 1)
                                                         <i class="fas fa-crown"></i>
                                                     @endif

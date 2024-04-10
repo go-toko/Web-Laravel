@@ -76,15 +76,15 @@
                                                             src="{{ isset($item->userProfile->picture) ? $item->userProfile->picture : asset('category/images/noimage.png') }}">
                                                     </div>
                                                 </td>
-                                                <td>{{ $item->userProfile->first_name . ' ' . $item->userProfile->last_name }}
+                                                <td>{{ $item->userProfile ? $item->userProfile->first_name . ' ' . $item->userProfile->last_name : $item->userCashierProfile->name }}
                                                     @if ($item->isSubscribe === 1)
                                                         <i class="fas fa-crown"></i>
                                                     @endif
                                                 </td>
                                                 <td> {{ $item->email }} </td>
-                                                <td>{{ isset($item->userProfile->phone) ? $item->userProfile->phone : '-' }}
+                                                <td>{{ $item->userProfile ? (isset($item->userProfile->phone) ? $item->userProfile->phone : '-') : (isset($item->userCashierProfile->phone) ? $item->userCashierProfile - phone : '-') }}
                                                 </td>
-                                                <td>{{ $item->userProfile->address ? $item->userProfile->address : '-' }}
+                                                <td>{{ $item->userProfile ? ($item->userProfile->address ? $item->userProfile->address : '-') : $item->userCashierProfile->address ?? '-' }}
                                                 </td>
                                                 <td>@livewire('role-selector', ['model' => $item, 'field' => 'role_id'], key($item->role_id))</td>
                                                 <td>

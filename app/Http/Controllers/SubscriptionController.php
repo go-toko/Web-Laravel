@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Midtrans\Config;
 use Midtrans\Snap;
 
+
 class SubscriptionController extends Controller
 {
     public function index()
@@ -55,7 +56,6 @@ class SubscriptionController extends Controller
                 ]);
 
                 DB::commit();
-
             } catch (\Throwable $th) {
                 DB::rollBack();
                 Log::debug("Fail to add or update the data of user subscription", ['error' => $th]);
@@ -104,7 +104,6 @@ class SubscriptionController extends Controller
                 ]);
 
                 DB::commit();
-
             } catch (\Throwable $th) {
                 DB::rollBack();
                 Log::debug("Fail to add or update the data of user subscription", ['error' => $th]);

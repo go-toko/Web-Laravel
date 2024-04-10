@@ -1,7 +1,7 @@
 <?php $page = 'menus'; ?>
 @extends('layout.mainlayout')
 
-@section('title', 'Products Brand')
+@section('title', 'Merek Produk')
 
 @section('forhead')
     {{-- Toastr Style --}}
@@ -23,8 +23,8 @@
                     </h6>
                 </div>
                 <div class="page-btn">
-                    <a href="{{ route('owner.products.brand.add') }}" class="btn btn-added">
-                        <img src="{{ URL::asset('assets/img/icons/plus.svg') }}" class="me-1" alt="img">Add Brand
+                    <a href="{{ route('owner.produk.merek.add') }}" class="btn btn-added">
+                        <img src="{{ URL::asset('assets/img/icons/plus.svg') }}" class="me-1" alt="img">Tambah Merek
                     </a>
                 </div>
             </div>
@@ -33,31 +33,29 @@
             <div class="row">
                 <div class="col-sm-12">
                     <section class="comp-section">
+                        <div class="row">
+                            <div class="col-12 d-flex justify-content-end">
+                                <div class="form-group d-flex align-items-center gap-3">
+                                    <a data-bs-toggle="tooltip" data-bs-placement="top" title="PDF" id="reportPdf"><img
+                                            src="{{ URL::asset('assets/img/icons/pdf.svg') }}" alt="img"></a>
+                                    <a data-bs-toggle="tooltip" data-bs-placement="top" title="Excel" id="reportExcel"><img
+                                            src="{{ URL::asset('assets/img/icons/excel.svg') }}" alt="img"></a>
+                                </div>
+                            </div>
+                        </div>
                         <div class="table-responsive">
                             <table class="table datanew">
                                 <thead>
                                     <tr>
-                                        <th class="col-0">
-                                            <label class="checkboxs">
-                                                <input type="checkbox" id="select-all" />
-                                                <span class="checkmarks"></span>
-                                            </label>
-                                        </th>
-                                        <th class="col-2">Image</th>
-                                        <th class="col-3">Brand name</th>
-                                        <th class="col-5">Description</th>
-                                        <th class="col-2">Action</th>
+                                        <th class="col-2">Logo</th>
+                                        <th class="col-3">Nama Merek</th>
+                                        <th class="col-5">Deskripsi</th>
+                                        <th class="col-2">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($brands as $brand)
                                         <tr>
-                                            <td>
-                                                <label class="checkboxs">
-                                                    <input type="checkbox" />
-                                                    <span class="checkmarks"></span>
-                                                </label>
-                                            </td>
                                             <td class="productimgname">
                                                 <a href="javascript:void(0);" class="product-img">
                                                     @if ($brand->images && $brand->images != 'noimage.png')
@@ -73,12 +71,12 @@
                                             <td>{{ $brand->description }}</td>
                                             <td>
                                                 <a class="me-3"
-                                                    href="{{ route('owner.products.brand.edit', ['id' => Crypt::encrypt($brand->id)]) }}">
+                                                    href="{{ route('owner.produk.merek.edit', ['id' => Crypt::encrypt($brand->id)]) }}">
                                                     <img src="{{ URL::asset('assets/img/icons/edit.svg') }}"
                                                         alt="img" />
                                                 </a>
                                                 <a class="me-3" id="confirm-delete"
-                                                    data-action="{{ route('owner.products.brand.delete', ['id' => Crypt::encrypt($brand->id)]) }}">
+                                                    data-action="{{ route('owner.produk.merek.delete', ['id' => Crypt::encrypt($brand->id)]) }}">
                                                     <img src="{{ URL::asset('assets/img/icons/delete.svg') }}"
                                                         alt="img" />
                                                 </a>
@@ -109,20 +107,14 @@ $msg = Session::get($type);
     <script src="{{ URL::asset('/assets/plugins/toastr/toastr.min.js') }}"></script>
     <script src="{{ URL::asset('/assets/plugins/toastr/toastr.js') }}"></script>
 
-    <script>
-        let type = {!! json_encode($type) !!};
-        let msg = {!! json_encode($msg) !!};
-        const title = {!! json_encode($title) !!};
-        @if (Session::has($type))
-            {
-                toastr[type](msg, title, {
-                    closeButton: !0,
-                    tapToDismiss: !1,
-                    positionClass: 'toast-top-center',
-                })
-            }
-        @endif
-    </script>
+    @if ($type != null)
+        <script>
+            let type = {!! json_encode($type) !!};
+            let msg = {!! json_encode($msg) !!};
+            const title = {!! json_encode($title) !!};
+            toastr[type](msg, title)
+        </script>
+    @endif
     <script>
         $(document).on('click', '#confirm-delete', function(event) {
             event.preventDefault();
@@ -143,7 +135,7 @@ $msg = Session::get($type);
                         headers: {
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                         },
-                        type: 'GET',
+                        type: 'DELETE',
                         success: function(data) {
                             Swal.fire({
                                 title: 'Deleted!',
@@ -166,5 +158,14 @@ $msg = Session::get($type);
                 }
             });
         });
+
+        $(document).on('click', '#reportPdf', function() {
+            const url = `{{ route('owner.produk.merek.reportPdf') }}`
+            window.open(url, '_blank')
+        })
+        $(document).on('click', '#reportExcel', function() {
+            const url = `{{ route('owner.produk.merek.reportExcel') }}`
+            window.open(url, '_blank')
+        })
     </script>
 @endsection

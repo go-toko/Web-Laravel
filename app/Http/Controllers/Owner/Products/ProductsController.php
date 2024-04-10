@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers\Owner\Products;
 
+use App\Exports\OwnerReportExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Owner\ProductsValidate;
 use App\Models\ProductBrand;
 use App\Models\ProductsCategoryModel;
 use App\Models\ProductsModel;
+use Dompdf\Dompdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Session;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProductsController extends Controller
 {
@@ -20,17 +23,23 @@ class ProductsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        // $products = ProductsModel::where(['isActive' => true])->get();
-        // if (Session::has('active')) {
         $idShops = Crypt::decrypt(Session::get('active'));
         $productsShop = ProductsModel::with('category', 'brand')->where(['shop_id' => $idShops, 'isActive' => true])->get();
-        // $products = $products->merge($productsShop);
         $products = $productsShop;
-        // }
+
+        $categories = $this->getCategoryByShop();
+        $brands = $this->getBrandByShop();
+
+        if ($request->query('category') | $request->query('brand')) {
+            $products = $this->filterByCategoryAndOrBrand($request, $products);
+        }
+
         return view('page.owner.products.index', [
-            'products' => $products
+            'products' => $products,
+            'categories' => $categories,
+            'brands' => $brands
         ]);
     }
 
@@ -54,7 +63,6 @@ class ProductsController extends Controller
      */
     public function store(ProductsValidate $request)
     {
-        // dd($request);
         try {
             if ($request->hasFile('image')) {
                 $filename = round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
@@ -63,6 +71,9 @@ class ProductsController extends Controller
                 $filename = 'noimage.png';
             }
             $name = Str::lower($request->name);
+            $request['buying_price'] =  implode('', explode('.', str_replace('Rp', '', $request->buying_price)));
+            $request['selling_price'] =  implode('', explode('.', str_replace('Rp', '', $request->selling_price)));
+
             // dd($request, $filename, $name);
             ProductsModel::create([
                 'category_id' => $request->category,
@@ -72,6 +83,7 @@ class ProductsController extends Controller
                 'description' => $request->description,
                 'sku' => $request->sku,
                 'quantity' => $request->quantity,
+                'unit' => $request->unit,
                 'price_buy' => $request->buying_price,
                 'price_sell' => $request->selling_price,
                 'images' => $filename,
@@ -80,7 +92,7 @@ class ProductsController extends Controller
             //throw $th;
             return back()->with(['type' => 'error', 'error' => 'Something wrong']);
         }
-        return redirect(route('owner.products.index'));
+        return redirect(route('owner.produk.daftar-produk.index'))->with(['type' => 'success', 'success' => 'Berhasil menambah produk']);
     }
 
     /**
@@ -138,6 +150,9 @@ class ProductsController extends Controller
                     'images' => $filename
                 ]);
             }
+            $request['buying_price'] =  implode('', explode('.', str_replace('Rp', '', $request->buying_price)));
+            $request['selling_price'] =  implode('', explode('.', str_replace('Rp', '', $request->selling_price)));
+
             $productData->update([
                 'category' => $request->category,
                 'brand' => $request->brand,
@@ -146,12 +161,13 @@ class ProductsController extends Controller
                 'price_buy' => $request->buying_price,
                 'price_sell' => $request->selling_price,
                 'quantity' => $request->quantity,
+                'unit' => $request->unit,
                 'description' => $request->description,
             ]);
         } catch (\Throwable $th) {
             return back()->with(['error' => 'Error when submit to system'], ['type' => 'error']);
         }
-        return redirect(route('owner.products.index'))->with(['type' => 'success', 'success' => 'Success saving products']);
+        return redirect(route('owner.produk.daftar-produk.index'))->with(['type' => 'success', 'success' => 'Berhasil mengubah informasi produk']);
     }
 
     /**
@@ -178,6 +194,21 @@ class ProductsController extends Controller
         }
     }
 
+    public function checkSKU(Request $request)
+    {
+        $counter = 0;
+        $padLength = 10 - strlen((string)$counter);
+        $nameSku = str_pad($request->sku, $padLength, "0", STR_PAD_RIGHT);
+        $newName = $nameSku . (string)$counter;
+        while (ProductsModel::where('sku', $newName)->exists()) {
+            $counter++;
+            $padLength = 10 - strlen((string)$counter);
+            $nameSku = str_pad($request->sku, $padLength, "0", STR_PAD_RIGHT);
+            $newName = $nameSku . (string)$counter;
+        }
+        return $newName;
+    }
+
     private function getCategoryByShop()
     {
         $categoryShop = ProductsCategoryModel::where(['shop_id' => Crypt::decrypt(Session::get('active')), 'isActive' => true])->get();
@@ -197,5 +228,56 @@ class ProductsController extends Controller
     private function getProductsById($id)
     {
         return ProductsModel::where(['id' => $id]);
+    }
+
+    private function filterByCategoryAndOrBrand(Request $request, $products)
+    {
+        if ($request->query('category')) {
+            $category = ProductsCategoryModel::where(['code' => $request->query('category')])->first();
+            $products = $request->query('category') == 'all' ? $products : $products->map(function ($item) use ($category) {
+                if ($item->category_id == $category->id) return $item;
+            })->filter();
+        }
+        if ($request->query('brand')) {
+            $brandId = $request->query('brand');
+            $products = $request->query('brand') == 'all' ? $products : $products->map(function ($item) use ($brandId) {
+                if ($item->brand_id == $brandId) return $item;
+            })->filter();
+        }
+        return $products;
+    }
+
+    public function reportPdf(Request $request)
+    {
+        $idShop = Crypt::decrypt(Session::get('active'));
+        $products = ProductsModel::with('category', 'brand')->where(['shop_id' => $idShop, 'isActive' => true])->get();
+        if ($request->query('category') || $request->query('brand')) {
+            $products = $this->filterByCategoryAndOrBrand($request, $products);
+        }
+
+        $html = view('page.owner.products.report-pdf', ['products' => $products]);
+
+        // Dompdf
+        $pdf = new Dompdf();
+        $pdf->loadHtml($html);
+        $pdf->setPaper('A4', 'landscape');
+
+        // Render file PDF
+        $pdf->render();
+
+        return $pdf->stream(time() . '-laporan-data-barang.pdf');
+    }
+
+    public function reportExcel(Request $request)
+    {
+        $idShop = Crypt::decrypt(Session::get('active'));
+        $products = ProductsModel::with('category', 'brand')->where(['shop_id' => $idShop, 'isActive' => true])->get();
+        if ($request->query('category') || $request->query('brand')) {
+            $products = $this->filterByCategoryAndOrBrand($request, $products);
+        }
+
+        $view = view('page.owner.products.report-excel', ['products' => $products]);
+
+        return Excel::download(new OwnerReportExport($view), time() . '-laporan-data-barang.xlsx');
     }
 }

@@ -26,17 +26,15 @@ class CategoryValidate extends FormRequest
      */
     public function rules()
     {
-        if (Route::is('owner.products.category.store')) {
+        if (Route::is('owner.produk.kategori.store')) {
             return [
                 'name' => 'required',
                 'code' => 'required|unique:products_category,code', // . Crypt::decrypt($this->id),
-                'image' => 'file|image|max:8192',
             ];
-        } elseif (Route::is('owner.products.category.update')) {
+        } elseif (Route::is('owner.produk.kategori.update')) {
             return [
                 'name' => 'required',
                 'code' => 'required|unique:products_category,code,' . Crypt::decrypt($this->id),
-                'image' => 'file|image|max:8192',
             ];
         }
     }

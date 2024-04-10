@@ -51,7 +51,7 @@ class User extends Authenticatable
 
     public function hasRole($role)
     {
-        if (strtolower($this->role->name) == strtolower($role)){
+        if (strtolower($this->role->name) == strtolower($role)) {
             return true;
         }
         return false;
@@ -59,18 +59,31 @@ class User extends Authenticatable
 
     public function userProfile()
     {
-        return $this->hasOne(UserProfileModel::class, foreignKey:'user_id');
+        return $this->hasOne(UserProfileModel::class, foreignKey: 'user_id');
     }
-    
+
     public function subscription()
     {
-        return $this->hasOne(UserSubscriptionModel::class, foreignKey:'user_id')->latestOfMany();
+        return $this->hasOne(UserSubscriptionModel::class, foreignKey: 'user_id')->latestOfMany();
     }
 
     public function shop()
     {
-        return $this->hasMany(ShopModel::class, foreignKey:'user_id');
+        return $this->hasMany(ShopModel::class, foreignKey: 'user_id');
     }
 
+    public function userCashierProfile()
+    {
+        return $this->hasOne(UserCashierModel::class, foreignKey: 'user_id');
+    }
 
+    public function sales()
+    {
+        return $this->hasMany(SalesModel::class, foreignKey: 'cashier_id');
+    }
+
+    public function supplier()
+    {
+        return $this->hasMany(SupplierModel::class, foreignKey: 'user_id');
+    }
 }

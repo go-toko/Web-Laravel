@@ -21,7 +21,7 @@
             margin-right: 20px;
         }
 
-        /* Style untuk informasi laporan */ 
+        /* Style untuk informasi laporan */
         .laporan-info {
             margin-bottom: 20px;
             clear: both;
@@ -55,7 +55,7 @@
 <body>
     <!-- Kop laporan -->
     <div class="laporan-kop">
-        <img class="laporan-logo" src="{{ URL::asset('/assets/img/Pos-gotoko-black.png') }}" alt="Logo Aplikasi">
+        <img class="laporan-logo" src="{{ URL::asset('assets/img/Pos-gotoko-black.png') }}" alt="Logo Aplikasi">
         Laporan List User
     </div>
 
@@ -63,7 +63,7 @@
     <div class="laporan-info">
         Aplikasi: Go-Toko<br>
         Laporan: List User<br>
-        Dicetak oleh: {{ Auth::user()->userProfile->first_name .' '. Auth::user()->userProfile->last_name }}<br>
+        Dicetak oleh: {{ Auth::user()->userProfile->first_name . ' ' . Auth::user()->userProfile->last_name }}<br>
         Tanggal Cetak: {{ Carbon\Carbon::now()->format('d-m-Y') }}
     </div>
 
@@ -80,7 +80,8 @@
             @foreach ($users as $item)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td>{{ $item->userProfile->first_name .' '.$item->userProfile->last_name }}</td>
+                    <td>{{ $item->userProfile ? $item->userProfile->first_name . ' ' . $item->userProfile->last_name : $item->userCashierProfile->name }}
+                    </td>
                     <td>{{ $item->email }}</td>
                     <td>{{ $item->role->name }}</td>
                 </tr>

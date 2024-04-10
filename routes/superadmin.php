@@ -2,9 +2,6 @@
 
 use App\Http\Controllers\Subscription\MenuSubscriptionController;
 use App\Http\Controllers\Superadmin\DashboardController;
-use App\Http\Controllers\Superadmin\Payments\PaymentManagementController;
-use App\Http\Controllers\Superadmin\Payments\PaymentTransactionController;
-use App\Http\Controllers\Superadmin\Payments\PaymentWithdrawalController;
 use App\Http\Controllers\Superadmin\People\ShopManagementController;
 use App\Http\Controllers\Superadmin\People\UserManagementController;
 use App\Http\Controllers\Superadmin\Settings\MenuController;
@@ -25,7 +22,7 @@ Route::group(['prefix' => 'superadmin', 'as' => 'superadmin.', 'middleware' => [
     Route::group(['prefix' => 'settings', 'as' => 'settings.'], function () {
 
         //menu URL's Group
-        Route::group(['prefix' => 'menu-management', 'as' => 'menu.'],  function () {
+        Route::group(['prefix' => 'menu-management', 'as' => 'menu.'], function () {
             Route::get('', [MenuController::class, 'index'])->name('index');
             Route::post('store', [MenuController::class, 'store'])->name('store');
             Route::post('{id}/update', [MenuController::class, 'update'])->name('update');
@@ -68,18 +65,19 @@ Route::group(['prefix' => 'superadmin', 'as' => 'superadmin.', 'middleware' => [
         });
 
     });
+    
     //subscription URL's Group
     Route::group(['prefix' => 'subscription', 'as' => 'subscription.'], function () {
 
         //subscription menu URL's Group
-        Route::group(['prefix' => 'menu-management', 'as' => 'menu.'],  function () {
+        Route::group(['prefix' => 'menu-management', 'as' => 'menu.'], function () {
             Route::get('', [MenuSubscriptionController::class, 'index'])->name('index');
             Route::post('store', [MenuSubscriptionController::class, 'store'])->name('store');
             Route::post('{id}/update', [MenuSubscriptionController::class, 'update'])->name('update');
             Route::post('destroy/{id}', [MenuSubscriptionController::class, 'destroy'])->name('destroy');
         });
 
-        Route::group(['prefix' => 'subscription-management', 'as' => 'management.'],  function () {
+        Route::group(['prefix' => 'subscription-management', 'as' => 'management.'], function () {
             Route::get('', [SubscriptionManagementController::class, 'index'])->name('index');
             Route::post('store', [SubscriptionManagementController::class, 'store'])->name('store');
             Route::post('{id}/update', [SubscriptionManagementController::class, 'update'])->name('update');
@@ -88,15 +86,16 @@ Route::group(['prefix' => 'superadmin', 'as' => 'superadmin.', 'middleware' => [
             Route::get('report-excel', [SubscriptionManagementController::class, 'reportExcel'])->name('report-excel');
         });
 
-        Route::group(['prefix' => 'subscription-order', 'as' => 'subscription-order.'],  function () {
+        Route::group(['prefix' => 'subscription-order', 'as' => 'subscription-order.'], function(){
             Route::get('', [SubscriptionOrderController::class, 'index'])->name('index');
             Route::get('report-pdf', [SubscriptionOrderController::class, 'reportPdf'])->name('report-pdf');
             Route::get('report-excel', [SubscriptionOrderController::class, 'reportExcel'])->name('report-excel');
         });
     });
 
-    // Payment URL's Group
-    Route::group(['prefix' => 'payment', 'as' => 'payment.'], function () {
+
+     // Payment URL's Group
+     Route::group(['prefix' => 'payment', 'as' => 'payment.'], function () {
         // Payment Management URL's Group
         Route::get('management', [PaymentManagementController::class, 'index'])->name('management');
         Route::get('edit/{id}/{status}', [PaymentManagementController::class, 'edit'])->name('edit');

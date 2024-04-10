@@ -18,16 +18,15 @@ class ShopModel extends Model
 
     public function product()
     {
-        return $this->hasMany(ProductsModel::class, foreignKey:'shop_id');
+        return $this->hasMany(ProductsModel::class, foreignKey: 'shop_id');
     }
 
-    public function paymentTransactions()
+    public function userCashier()
     {
-        return $this->hasMany(MerchantPaymentTransactions::class, foreignKey:'shop_id');
+        return $this->hasOne(UserCashierModel::class, foreignKey: 'shop_id');
     }
-
-    public function paymentWithdrawals()
+    public function restock()
     {
-        return $this->hasMany(MerchantPaymentWithdrawal::class, foreignKey:'shop_id');
+        return $this->hasMany(RestockModel::class, foreignKey: 'restock_id');
     }
 }

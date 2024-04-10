@@ -20,6 +20,6 @@ class alreadySelectShop
         if (Session::has('active')) {
             return $next($request);
         }
-        return redirect(route('owner.dashboard'))->with(['type' => 'info', 'info' => 'You should choose shop first']);
+        return redirect(route('owner.dashboard'))->with(['type' => 'info', 'info' => 'Silahkan pilih toko yg ingin anda kelola']);
     }
 }

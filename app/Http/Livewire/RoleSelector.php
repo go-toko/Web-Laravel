@@ -24,15 +24,15 @@ class RoleSelector extends Component
         Log::debug("Toggle-switch " . $role_id);
         $this->model->setAttribute($this->field, $role_id)->save();
         $this->dispatchBrowserEvent('show-toast', [
-        'type' => 'success',
-        'message' => 'Update berhasil dilakukan.',
-        'title' => 'Sukses'
-    ]);
+            'type' => 'success',
+            'message' => 'Update berhasil dilakukan.',
+            'title' => 'Sukses'
+        ]);
     }
 
     public function render()
     {
-        $roles = RolesModel::where('name', 'not like', '%cashier%')->get();
+        $roles = RolesModel::get();
         return view('livewire.role-selector', [
             'roles' => $roles,
         ]);

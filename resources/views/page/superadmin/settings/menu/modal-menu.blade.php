@@ -33,20 +33,32 @@
                         <table>
                             <tbody style="font-size: 2rem;">
                                 <tr>
-                                    <td class="p-3"><i class="fas fa-home" onclick="selectIcon('fas fa-home')"></i></td>
-                                    <td class="p-3"><i class="fas fa-user" onclick="selectIcon('fas fa-user')"></i></td>
-                                    <td class="p-3"><i class="fas fa-cog" onclick="selectIcon('fas fa-cog')"></i></td>
-                                    <td class="p-3"><i class="fas fa-bell" onclick="selectIcon('fas fa-bell')"></i></td>
-                                    <td class="p-3"><i class="fas fa-file-alt" onclick="selectIcon('fas fa-file-alt')"></i></td>
-                                    <td class="p-3"><i class="fas fa-shipping-fast" onclick="selectIcon('fas fa-shipping-fast')"></i></td>
+                                    <td class="p-3"><i class="fas fa-home" onclick="selectIcon('fas fa-home')"></i>
+                                    </td>
+                                    <td class="p-3"><i class="fas fa-user" onclick="selectIcon('fas fa-user')"></i>
+                                    </td>
+                                    <td class="p-3"><i class="fas fa-cog" onclick="selectIcon('fas fa-cog')"></i>
+                                    </td>
+                                    <td class="p-3"><i class="fas fa-bell" onclick="selectIcon('fas fa-bell')"></i>
+                                    </td>
+                                    <td class="p-3"><i class="fas fa-file-alt"
+                                            onclick="selectIcon('fas fa-file-alt')"></i></td>
+                                    <td class="p-3"><i class="fas fa-shipping-fast"
+                                            onclick="selectIcon('fas fa-shipping-fast')"></i></td>
                                 </tr>
                                 <tr>
-                                    <td class="p-3"><i class="fas fa-envelope" onclick="selectIcon('fas fa-envelope')"></i></td>
-                                    <td class="p-3"><i class="fas fa-search" onclick="selectIcon('fas fa-search')"></i></td>
-                                    <td class="p-3"><i class="fas fa-trash" onclick="selectIcon('fas fa-trash')"></i></td>
-                                    <td class="p-3"><i class="fas fa-shopping-cart" onclick="selectIcon('fas fa-shopping-cart')"></i></td>
-                                    <td class="p-3"><i class="fas fa-shopping-basket" onclick="selectIcon('fas fa-shopping-basket')"></i></td>
-                                    <td class="p-3"><i class="fas fa-box-open" onclick="selectIcon('fas fa-box-open')"></i></td>
+                                    <td class="p-3"><i class="fas fa-envelope"
+                                            onclick="selectIcon('fas fa-envelope')"></i></td>
+                                    <td class="p-3"><i class="fas fa-search"
+                                            onclick="selectIcon('fas fa-search')"></i></td>
+                                    <td class="p-3"><i class="fas fa-trash" onclick="selectIcon('fas fa-trash')"></i>
+                                    </td>
+                                    <td class="p-3"><i class="fas fa-shopping-cart"
+                                            onclick="selectIcon('fas fa-shopping-cart')"></i></td>
+                                    <td class="p-3"><i class="fas fa-shopping-basket"
+                                            onclick="selectIcon('fas fa-shopping-basket')"></i></td>
+                                    <td class="p-3"><i class="fas fa-box-open"
+                                            onclick="selectIcon('fas fa-box-open')"></i></td>
                                 </tr>
                                 <!-- Tambahkan baris lain jika diperlukan -->
                             </tbody>

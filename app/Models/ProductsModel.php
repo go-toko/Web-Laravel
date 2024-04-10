@@ -15,7 +15,7 @@ class ProductsModel extends Model
     {
         return $this->belongsTo(ProductsCategoryModel::class);
     }
-    
+
     public function brand()
     {
         return $this->belongsTo(ProductBrand::class);

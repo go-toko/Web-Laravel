@@ -24,8 +24,7 @@ class StoreValidate extends FormRequest
      */
     public function rules()
     {
-        if (Route::is('owner.settings.store.store')) {
-
+        if (Route::is('owner.pengaturan.daftar-toko.store')) {
             return [
                 'name' => 'required',
                 'description' => 'required',
@@ -34,7 +33,7 @@ class StoreValidate extends FormRequest
                 'district' => 'required',
                 'village' => 'required',
             ];
-        } else if (Route::is('owner.settings.store.update')) {
+        } else if (Route::is('owner.pengaturan.daftar-toko.update')) {
             return [
                 'name' => 'required',
                 'description' => 'required',

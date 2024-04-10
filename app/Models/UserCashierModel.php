@@ -10,12 +10,17 @@ class UserCashierModel extends Model
     use HasFactory;
 
     protected $table = 'user_cashier';
-
     protected $guarded = [
         'id'
     ];
 
-    public function shop(){
-        $this->belongsTo(User::class);
+    public function shop()
+    {
+        return $this->belongsTo(ShopModel::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

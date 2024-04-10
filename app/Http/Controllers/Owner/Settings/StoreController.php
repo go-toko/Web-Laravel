@@ -65,7 +65,7 @@ class StoreController extends Controller
         $request['district'] = District::where('id', $request->district)->first()->name;
         $request['village'] = Village::where('id', $request->village)->first()->name;
         $request['user_id'] = Auth::user()->id;
-        // dd($request);
+        $request['balance'] = implode('', explode('.', str_replace('Rp', '', $request->balance)));
         try {
             ShopModel::create([
                 'name' => Str::lower($request->name),
@@ -76,14 +76,12 @@ class StoreController extends Controller
                 'district' => $request->district,
                 'village' => $request->village,
                 'address' => $request->address,
+                'balance' => $request->balance,
             ]);
-            // ShopModel::create([
-            //     'name' => 
-            // ]);
         } catch (\Throwable $e) {
             return back()->with(['error', 'Something wrong', 'type' => 'error']);
         }
-        return redirect(route('owner.settings.store.index'))->with(['success' => 'Success make new store', 'type' => 'success']);
+        return redirect(route('owner.pengaturan.daftar-toko.index'))->with(['success' => 'Success make new store', 'type' => 'success']);
     }
 
     /**
@@ -153,8 +151,7 @@ class StoreController extends Controller
         } catch (\Throwable $e) {
             return back()->with(['type' => 'error', 'error' => 'Something wrong']);
         }
-        return redirect(route('owner.settings.store.index'))->with(['type' => 'success', 'success' => 'Successfully changed data']);
-        // dd($request, $id, $dataStore, gettype($request->province));
+        return redirect(route('owner.pengaturan.daftar-toko.index'))->with(['type' => 'success', 'success' => 'Successfully changed data']);
     }
 
     /**

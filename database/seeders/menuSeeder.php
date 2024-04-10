@@ -25,23 +25,20 @@ class menuSeeder extends Seeder
             'icon' => 'fas fa-tachometer-alt',
             'status' => 1,
         ]);
-
         $supeople = MenuModel::create([
             'name' => 'People',
             'url' => '#',
             'icon' => 'fas fa-users',
             'status' => 1,
         ]);
-
         $susettings = MenuModel::create([
             'name' => 'Settings',
             'url' => '#',
             'icon' => 'fas fa-cogs',
             'status' => 1,
         ]);
-
         $suSubscribe = MenuModel::create([
-            'name' => 'Subscribe',
+            'name' => 'Subscription',
             'url' => '#',
             'icon' => 'fas fa-bell',
             'status' => 1,
@@ -54,37 +51,38 @@ class menuSeeder extends Seeder
             'icon' => 'fas fa-tachometer-alt',
             'status' => 1,
         ]);
-
         $owproducts = MenuModel::create([
-            'name' => 'Product',
+            'name' => 'Produk',
             'url' => '#',
             'icon' => 'fas fa-box-open',
             'status' => 1,
         ]);
-
+        $owpengeluaran = MenuModel::create([
+            'name' => 'Pengeluaran',
+            'url' => '#',
+            'icon' => 'fas fa-shopping-basket',
+            'status' => 1
+        ]);
         $owsales = MenuModel::create([
-            'name' => 'Sales',
+            'name' => 'Penjualan',
             'url' => '#',
             'icon' => 'fas fa-shopping-cart',
             'status' => 1,
         ]);
-
-        $owpurchases = MenuModel::create([
-            'name' => 'Purchases',
-            'url' => '#',
-            'icon' => 'fas fa-shopping-basket',
-            'status' => 1,
-        ]);
-
-        $owreport = MenuModel::create([
-            'name' => 'Reports',
+        $owlaporan = MenuModel::create([
+            'name' => 'Laporan',
             'url' => '#',
             'icon' => 'fas fa-file-alt',
             'status' => 1,
         ]);
-
+        $oworang = MenuModel::create([
+            'name' => 'Orang',
+            'url' => '#',
+            'icon' => 'fas fa-user',
+            'status' => 1,
+        ]);
         $owsettings = MenuModel::create([
-            'name' => 'Settings',
+            'name' => 'Pengaturan',
             'url' => '#',
             'icon' => 'fas fa-cogs',
             'status' => 1,
@@ -111,7 +109,7 @@ class menuSeeder extends Seeder
         SubMenuModel::create([
             'menu_id' => $susettings->id,
             'name' => 'Menu Management',
-            'url' => 'superadmin/settings/menu',
+            'url' => 'superadmin/settings/menu-management',
             'status' => 1,
         ]);
 
@@ -119,13 +117,19 @@ class menuSeeder extends Seeder
         SubMenuModel::create([
             'menu_id' => $suSubscribe->id,
             'name' => 'Menu Management',
-            'url' => 'superadmin/subscription/menu',
+            'url' => 'superadmin/subscription/menu-management',
             'status' => 1,
         ]);
         SubMenuModel::create([
             'menu_id' => $suSubscribe->id,
             'name' => 'Subscription Management',
-            'url' => 'superadmin/subscription/management',
+            'url' => 'superadmin/subscription/subscription-management',
+            'status' => 1,
+        ]);
+        SubMenuModel::create([
+            'menu_id' => $suSubscribe->id,
+            'name' => 'Subscription Order',
+            'url' => 'superadmin/subscription/subscription-order',
             'status' => 1,
         ]);
 
@@ -133,84 +137,113 @@ class menuSeeder extends Seeder
         //submenu product
         SubMenuModel::create([
             'menu_id' => $owproducts->id,
-            'name' => 'Products',
-            'url' => 'owner/products/list',
+            'name' => 'Daftar Produk',
+            'url' => 'owner/produk/daftar-produk',
             'status' => 1
         ]);
         SubMenuModel::create([
             'menu_id' => $owproducts->id,
-            'name' => 'Create Product',
-            'url' => 'owner/products/create',
+            'name' => 'Kategori',
+            'url' => 'owner/produk/kategori',
             'status' => 1
         ]);
         SubMenuModel::create([
             'menu_id' => $owproducts->id,
-            'name' => 'Category',
-            'url' => 'owner/products/category',
+            'name' => 'Merek',
+            'url' => 'owner/produk/merek',
+            'status' => 1
+        ]);
+
+        // Submenu Pengeluaran
+        SubMenuModel::create([
+            'menu_id' => $owpengeluaran->id,
+            'name' => 'Pengeluaran',
+            'url' => 'owner/pengeluaran/pengeluaran',
             'status' => 1
         ]);
         SubMenuModel::create([
-            'menu_id' => $owproducts->id,
-            'name' => 'Brand',
-            'url' => 'owner/products/brand',
+            'menu_id' => $owpengeluaran->id,
+            'name' => 'Kategori',
+            'url' => 'owner/pengeluaran/kategori',
+            'status' => 1
+        ]);
+        SubMenuModel::create([
+            'menu_id' => $owpengeluaran->id,
+            'name' => 'Statistik',
+            'url' => 'owner/pengeluaran/statistik',
             'status' => 1
         ]);
 
         //submenu sales
         SubMenuModel::create([
             'menu_id' => $owsales->id,
-            'name' => 'Sales',
-            'url' => 'owner/sales/sales',
+            'name' => 'Penjualan',
+            'url' => 'owner/penjualan/penjualan',
             'status' => 1
         ]);
         SubMenuModel::create([
             'menu_id' => $owsales->id,
-            'name' => 'POS',
-            'url' => 'owner/sales/pos',
+            'name' => 'Aplikasi Kasir',
+            'url' => 'owner/penjualan/aplikasi-kasir',
+            'status' => 1
+        ]);
+        SubMenuModel::create([
+            'menu_id' => $owsales->id,
+            'name' => 'Statistik Penjualan',
+            'url' => 'owner/penjualan/statistik-penjualan',
             'status' => 1
         ]);
 
         //submenu purchases
-        SubMenuModel::create([
-            'menu_id' => $owpurchases->id,
-            'name' => 'Purchases',
-            'url' => 'owner/purchases/purchases',
-            'status' => 1
-        ]);
-        SubMenuModel::create([
-            'menu_id' => $owpurchases->id,
-            'name' => 'Order',
-            'url' => 'owner/purchases/order',
-            'status' => 1
-        ]);
+        // SubMenuModel::create([
+        //     'menu_id' => $owpurchases->id,
+        //     'name' => 'Purchases',
+        //     'url' => 'owner/purchases/purchases',
+        //     'status' => 1
+        // ]);
+        // SubMenuModel::create([
+        //     'menu_id' => $owpurchases->id,
+        //     'name' => 'Order',
+        //     'url' => 'owner/purchases/order',
+        //     'status' => 1
+        // ]);
 
         //submenu report
         SubMenuModel::create([
-            'menu_id' => $owreport->id,
-            'name' => 'Sales Report',
-            'url' => 'owner/report/sales',
+            'menu_id' => $owlaporan->id,
+            'name' => 'Produk',
+            'url' => 'owner/laporan/produk',
             'status' => 1
         ]);
         SubMenuModel::create([
-            'menu_id' => $owreport->id,
-            'name' => 'Inventory Report',
-            'url' => 'owner/report/inventory',
+            'menu_id' => $owlaporan->id,
+            'name' => 'Pengeluaran',
+            'url' => 'owner/laporan/pengeluaran',
             'status' => 1
+        ]);
+
+        // Submenu Orang
+        SubMenuModel::create([
+            'menu_id' => $oworang->id,
+            'name' => 'Pemasok',
+            'url' => 'owner/orang/pemasok',
+            'status' => 1,
+        ]);
+        SubMenuModel::create([
+            'menu_id' => $oworang->id,
+            'name' => 'Kasir',
+            'url' => 'owner/orang/kasir',
+            'status' => 1,
         ]);
 
         //submenu Settings
         SubMenuModel::create([
             'menu_id' => $owsettings->id,
-            'name' => 'My Profile',
-            'url' => 'owner/settings/profile',
+            'name' => 'Daftar Toko',
+            'url' => 'owner/pengaturan/daftar-toko',
             'status' => 1
         ]);
-        SubMenuModel::create([
-            'menu_id' => $owsettings->id,
-            'name' => 'My Store',
-            'url' => 'owner/settings/store',
-            'status' => 1
-        ]);
+
 
         //RoleMenu Table
         //Superadmin
@@ -252,18 +285,23 @@ class menuSeeder extends Seeder
         ]);
         RoleMenuModel::create([
             'role_id' => 2,
+            'menu_id' => $owpengeluaran->id,
+            'subscribe' => 0,
+        ]);
+        RoleMenuModel::create([
+            'role_id' => 2,
             'menu_id' => $owsales->id,
             'subscribe' => 0,
         ]);
         RoleMenuModel::create([
             'role_id' => 2,
-            'menu_id' => $owpurchases->id,
+            'menu_id' => $owlaporan->id,
             'subscribe' => 0,
         ]);
         RoleMenuModel::create([
             'role_id' => 2,
-            'menu_id' => $owreport->id,
-            'subscribe' => 1,
+            'menu_id' => $oworang->id,
+            'subscribe' => 0,
         ]);
         RoleMenuModel::create([
             'role_id' => 2,

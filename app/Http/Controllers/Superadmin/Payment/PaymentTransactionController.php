@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Superadmin\Payments;
+namespace App\Http\Controllers\Superadmin\Payment;
 
 use App\Http\Controllers\Controller;
 use App\Models\MerchantPaymentTransactions;

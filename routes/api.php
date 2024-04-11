@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\Payment\PaydisiniController;
-use App\Http\Controllers\Superadmin\Payments\PaymentManagementController;
+use App\Http\Controllers\Superadmin\Payment\PaymentManagementController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -22,4 +22,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 Route::get('payment', [PaymentManagementController::class, 'list']);
+Route::get('payment/paydisini/callback', [PaydisiniController::class, 'callback']);
 Route::post('payment/paydisini/{nama}', [PaydisiniController::class, 'create']);

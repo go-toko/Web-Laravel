@@ -8,6 +8,8 @@ use App\Models\MerchantPaymentTransactions;
 use Illuminate\Http\Request;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Validator;
+use App\Models\SalesModel;
+use Illuminate\Support\Facades\DB;
 
 class PaydisiniController extends Controller
 {
@@ -65,13 +67,30 @@ class PaydisiniController extends Controller
             $data = MerchantPaymentTransactions::where('transaction_ref', $request->unique_code)->first();
 
             if ($data) {
-                $data->update([
-                    'status' => $request->status === 'Success' ? 'success' : 'failed',
-                ]);
+                try {
+                    DB::beginTransaction();
 
-                return response()->json([
-                    'success' => true,
-                ]);
+                    $data->update([
+                        'status' => $request->status === 'Success' ? 'success' : 'failed',
+                    ]);
+
+                    $sales = SalesModel::find($data->sales_id);
+                    $sales->update([
+                        'status' => $request->status === 'Success' ? 'PAID' : 'VOID',
+                    ]);
+
+                    return response()->json([
+                        'success' => true,
+                    ]);
+
+                    DB::commit();
+                } catch (\Exception $e) {
+                    DB::rollBack();
+
+                    return response()->json([
+                        'success' => false,
+                    ]);
+                }
             }
         }
 

@@ -22,5 +22,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 Route::get('payment', [PaymentManagementController::class, 'list']);
-Route::get('payment/paydisini/callback', [PaydisiniController::class, 'callback']);
+Route::post('payment/paydisini/callback', [PaydisiniController::class, 'callback']);
 Route::post('payment/paydisini/{nama}', [PaydisiniController::class, 'create']);

@@ -10,7 +10,19 @@ class MerchantPaymentTransactions extends Model
     use HasFactory;
 
     public $table = 'merchant_payment_transactions';
-    protected $fillable = ['payment_id', 'shop_id', 'sales_id', 'transaction_ref', 'payment_type', 'amount', 'status'];
+    protected $fillable = [
+        'payment_id',
+        'shop_id',
+        'sales_id',
+        'transaction_ref',
+        'payment_type',
+        'amount',
+        'payment_url',
+        'description',
+        'status',
+        'expired_at',
+        'payment_at',
+    ];
 
     public function payment()
     {

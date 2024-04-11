@@ -156,6 +156,9 @@ class PaydisiniController extends Controller
                     'transaction_ref' => $unique_code,
                     'payment_type' => $nama,
                     'amount' => $request->amount,
+                    'expired_at' => $response->expired,
+                    'payment_url' => $response->checkout_url,
+                    'description' => $response->qrcode_url,
                 ]);
             }
 

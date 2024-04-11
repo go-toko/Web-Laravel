@@ -41,7 +41,7 @@ class PaydisiniController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'msg' => $e->getMessage(),
             ]);
         }
     }
@@ -82,55 +82,62 @@ class PaydisiniController extends Controller
 
     public function create(Request $request, $nama)
     {
-        $validator = Validator::make($request->all(), [
-            'shop_id' => 'required',
-            'sales_id' => 'required',
-            'amount' => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validator->errors(),
+        try {
+            $validator = Validator::make($request->all(), [
+                'shop_id' => 'required',
+                'sales_id' => 'required',
+                'amount' => 'required',
             ]);
-        }
 
-        $data = MerchantPayment::where([
-            'nama' => $nama,
-            'provider' => 'Paydisini',
-            'status' => 'ACTIVE',
-        ])->first();
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $validator->errors(),
+                ]);
+            }
 
-        if (!$data) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Payment not found or not active',
-            ]);
-        }
+            $data = MerchantPayment::where([
+                'nama' => $nama,
+                'provider' => 'Paydisini',
+                'status' => 'ACTIVE',
+            ])->first();
 
-        $unique_code = $this->randomString(32);
+            if (!$data) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Payment not found or not active',
+                ]);
+            }
 
-        $response = $this->fetcher([
-            'request' => 'new',
-            'unique_code' => $unique_code,
-            'service' => 11,
-            'amount' => $request->amount,
-            'valid_time' => 1800,
-            'type_fee' => 1,
-            'signature' => md5(env('PAYDISINI_KEY') . $unique_code . 11 . $request->amount . 1800 . 'NewTransaction'),
-        ]);
+            $unique_code = $this->randomString(32);
 
-        if (isset($response->success) && $response->success) {
-            MerchantPaymentTransactions::create([
-                'payment_id' => $data->id,
-                'shop_id' => $request->shop_id,
-                'sales_id' => $request->sales_id,
-                'transaction_ref' => $unique_code,
-                'payment_type' => $nama,
+            $response = $this->fetcher([
+                'request' => 'new',
+                'unique_code' => $unique_code,
+                'service' => 11,
                 'amount' => $request->amount,
+                'valid_time' => 1800,
+                'type_fee' => 1,
+                'signature' => md5(env('PAYDISINI_KEY') . $unique_code . 11 . $request->amount . 1800 . 'NewTransaction'),
+            ]);
+
+            if (isset($response->success) && $response->success) {
+                MerchantPaymentTransactions::create([
+                    'payment_id' => $data->id,
+                    'shop_id' => $request->shop_id,
+                    'sales_id' => $request->sales_id,
+                    'transaction_ref' => $unique_code,
+                    'payment_type' => $nama,
+                    'amount' => $request->amount,
+                ]);
+            }
+
+            return response()->json($response);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'msg' => $e->getMessage(),
             ]);
         }
-
-        return response()->json($response);
     }
 }

@@ -64,33 +64,41 @@ class PaydisiniController extends Controller
     public function callback(Request $request)
     {
         if ($request->signature === md5(env('PAYDISINI_KEY') . $request->unique_code . 'CallbackStatus')) {
-            $data = MerchantPaymentTransactions::where('transaction_ref', $request->unique_code)->first();
 
-            if ($data) {
-                try {
-                    DB::beginTransaction();
+            try {
+                DB::beginTransaction();
 
-                    $data->update([
-                        'status' => $request->status === 'Success' ? 'success' : 'failed',
-                    ]);
+                // Get transaction data
+                $data = MerchantPaymentTransactions::where('transaction_ref', str($request->unique_code))->first();
 
-                    $sales = SalesModel::find($data->sales_id);
-                    $sales->update([
-                        'status' => $request->status === 'Success' ? 'PAID' : 'VOID',
-                    ]);
-
-                    return response()->json([
-                        'success' => true,
-                    ]);
-
-                    DB::commit();
-                } catch (\Exception $e) {
-                    DB::rollBack();
-
+                if (!$data) {
                     return response()->json([
                         'success' => false,
                     ]);
                 }
+
+                // Update transaction status
+                $data->update([
+                    'status' => $request->status === 'Success' ? 'success' : 'failed',
+                ]);
+
+                // Update sales status
+                SalesModel::where('id', $data->sales_id)->update([
+                    'status' => $request->status === 'Success' ? 'PAID' : 'VOID',
+                ]);
+
+                DB::commit();
+
+                return response()->json([
+                    'success' => true,
+                ]);
+
+            } catch (\Exception $e) {
+                DB::rollBack();
+
+                return response()->json([
+                    'success' => false,
+                ]);
             }
         }
 

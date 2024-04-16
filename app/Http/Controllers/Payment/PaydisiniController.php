@@ -80,6 +80,7 @@ class PaydisiniController extends Controller
                 // Update transaction status
                 $data->update([
                     'status' => $request->status === 'Success' ? 'success' : 'failed',
+                    'payment_at' => $request->status === 'Success' ? now() : null,
                 ]);
 
                 // Update sales status
@@ -155,7 +156,7 @@ class PaydisiniController extends Controller
                     'sales_id' => $request->sales_id,
                     'transaction_ref' => $unique_code,
                     'payment_type' => $nama,
-                    'amount' => $request->amount,
+                    'amount' => $response->data->amount,
                     'expired_at' => $response->data->expired,
                     'payment_url' => $response->data->checkout_url,
                     'description' => $response->data->qrcode_url,

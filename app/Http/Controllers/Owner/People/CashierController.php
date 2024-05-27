@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Owner\People;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Owner\CashierValidate;
+use App\Models\ShopModel;
 use App\Models\User;
 use App\Models\UserCashierModel;
+use App\Models\UserProfileModel;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -24,11 +27,15 @@ class CashierController extends Controller
      */
     public function index()
     {
-        $cashiers = UserCashierModel::where(['shop_id' => Crypt::decrypt(Session::get('active')), 'isActive' => true])->select('id', 'username', 'name', 'birthDate', 'gender', 'picture', 'status', 'address', 'isActive', 'created_at', 'updated_at')->get();
-        $status = ['Aktif', 'Resign', 'Keluar'];
+        $listShopOwner = ShopModel::where(['user_id' => Auth::user()->id])->get();
+        $listShopIdOwner = [];
+        foreach ($listShopOwner as $shop) {
+            array_push($listShopIdOwner, $shop->id);
+        }
+        $cashiers = UserCashierModel::with(['user.userProfile'])->whereIn('shop_id', $listShopIdOwner)->get();
         return view('page.owner.cashier.index', [
             'cashiers' => $cashiers,
-            'status' => $status
+            'shops' => $listShopOwner
         ]);
     }
 
@@ -39,7 +46,10 @@ class CashierController extends Controller
      */
     public function create()
     {
-        return view('page.owner.cashier.add-edit');
+        $listShopOwner = ShopModel::where(['user_id' => Auth::user()->id])->get();
+        return view('page.owner.cashier.add-edit', [
+            'shops' => $listShopOwner
+        ]);
     }
 
     /**
@@ -51,23 +61,6 @@ class CashierController extends Controller
     public function store(CashierValidate $request)
     {
         try {
-            $name = str_replace(' ', '', Str::lower($request->username));
-            if ($request->hasFile('picture')) {
-                $file = $request->file('picture');
-                $ext = $file->getClientOriginalExtension();
-                $filename = time() . '-' . Str::random() . '-' . $name . '.' . $ext;
-
-                // Save to local storage 
-                $file->move(public_path('images/cashier-profile'), $filename);
-
-                // Compress and save to local storage
-                $originalImagePath = public_path("images/cashier-profile/" . $filename);
-                Image::make($originalImagePath)->resize(500, null, function ($constraint) {
-                    $constraint->aspectRatio();
-                })->save();
-            } else {
-                $filename = 'default-profile.png';
-            }
             DB::beginTransaction();
             $user =  User::create([
                 'email' => $request->email,
@@ -75,47 +68,27 @@ class CashierController extends Controller
                 'role_id' => 3
             ]);
             UserCashierModel::create([
-                'shop_id' => Crypt::decrypt(Session::get('active')),
+                'shop_id' => $request->shop,
                 'user_id' => $user->id,
-                'username' => $name,
-                'name' => $request->name,
-                'birthDate' => Carbon::createFromFormat('d-m-Y', $request->birthDate)->format('Y-m-d'),
+            ]);
+            UserProfileModel::create([
+                'user_id' => $user->id,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'nickname' => $request->nickname,
+                'birthdate' => $request->birthDate ? Carbon::createFromFormat('d-m-Y', $request->birthDate)->format('Y-m-d') : null,
                 'gender' => $request->gender,
-                'picture' => $filename,
                 'address' => $request->address,
+                'phone' => $request->phone,
             ]);
             DB::commit();
             return redirect(route('owner.orang.kasir.index'))->with(['type' => 'success', 'success' => 'Berhasil menambahkan kasir']);
         } catch (\Throwable $e) {
             # code...
             DB::rollBack();
+            dd($e);
             return back()->with(['type' => 'error', 'error' => 'Gagal menambahkan kasir']);
         }
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        $cashier = $this->cashierById($id);
-        return view('page.owner.cashier.add-edit', [
-            'data' => $cashier
-        ]);
     }
 
     /**
@@ -131,13 +104,27 @@ class CashierController extends Controller
         try {
             DB::beginTransaction();
             $cashier->update([
-                'status' => $request->status,
+                'shop_id' => $request->shop_id,
             ]);
             DB::commit();
-            return response()->json(['title' => "Kasir $cashier->name", 'msg' => 'Berhasil merubah status kasir.']);
+            return response()->json(['title' => "Kasir " . $cashier->user->userProfile->first_name, 'msg' => 'Berhasil merubah toko kasir.']);
         } catch (\Throwable $e) {
             DB::rollBack();
-            return response()->json(['title' => "Kasir $cashier->name", 'msg' => 'Gagal merubah status kasir.']);
+            return response()->json(['title' => "Kasir " . $cashier->user->userProfile->first_name, 'msg' => 'Gagal merubah toko kasir.']);
+        }
+    }
+
+    public function restore($id)
+    {
+        $cashier = $this->cashierById($id);
+        try {
+            DB::beginTransaction();
+            $cashier->update(['isActive' => true]);
+            DB::commit();
+            return response()->json(['msg' => 'Berhasil mengaktifkan kasir.']);
+        } catch (\Throwable $error) {
+            DB::rollBack();
+            return response()->json(['msg' => 'Gagal mengaktifkan kasir.']);
         }
     }
 
@@ -162,11 +149,11 @@ class CashierController extends Controller
 
     private function cashierById($id)
     {
-        return UserCashierModel::where(['id' => Crypt::decrypt($id)])->first();
+        return UserCashierModel::with(['user.userProfile'])->where(['id' => Crypt::decrypt($id)])->first();
     }
 
-    public function cashierByUsername($username)
+    public function cashierByEmail($email)
     {
-        return UserCashierModel::with('shop')->where(['username' => $username, 'isActive' => true])->select('id', 'username', 'name', 'picture', 'created_at', 'gender', 'address', 'status', 'birthDate', 'shop_id')->first();
+        return User::with(['userProfile', 'userCashier.shop'])->where(['email' => $email])->first();
     }
 }

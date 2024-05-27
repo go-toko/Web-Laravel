@@ -29,35 +29,37 @@ class CashFlowController extends Controller
 
     public function getCashFlow(Request $request)
     {
+        // init Value
+        $amounts = !$request->query('month') ? [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+        // init Parameter
         $shop_id = $request->query('shop_id') ?? ShopModel::where('user_id', Auth::user()->id)->latest()->first()->id;
         $year = $request->query('year') ?? Carbon::now()->year;
+
+        // init Result
+        $expenses = ExpensesModel::where(['shop_id' => $shop_id])->whereYear('date', $year);
+        $sales = SalesModel::where(['shop_id' => $shop_id])->whereYear('created_at', $year);
+        $amountExpense = $amounts;
+        $amountSales = $amounts;
+
         if ($request->query('month')) {
             $month = $request->query('month');
             $month = strlen((string)$month) == 1 ? "0$month" : (string)$month;
+            $expenses = $expenses->whereMonth('date', $month);
+            $sales = $sales->whereMonth('created_at', $month);
         }
 
-        $amounts = !$request->query('month') ? [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-
-        $expenses = $request->query('month') ?
-            ExpensesModel::where(['shop_id' => $shop_id, 'isActive' => true])->where('date', 'LIKE', "$year-$month%")->get() :
-            ExpensesModel::where(['shop_id' => $shop_id, 'isActive' => true])->where('date', 'LIKE', "$year%")->get();
-        $amountExpense = $amounts;
-
-        foreach ($expenses as $expense) {
+        foreach ($expenses->get() as $expense) {
             $index = $request->query('month') ? explode('-', $expense->date)[2] - 1 : explode('-', $expense->date)[1] - 1;
             $amountExpense[$index] += $expense->amount;
         }
 
-        $sales = $request->query('month') ?
-            SalesModel::where(['shop_id' => $shop_id, 'isActive' => true])->where('date', 'LIKE', "$year-$month%")->get() :
-            SalesModel::where(['shop_id' => $shop_id, 'isActive' => true])->where('date', 'LIKE', "$year%")->get();
-        $amountSales = $amounts;
-        foreach ($sales as $sale) {
+        foreach ($sales->get() as $sale) {
+            $date = Carbon::create($sale->created_at);
             $index = $request->query('month') ?
-                explode('-', $sale->date)[2] - 1 :
-                explode('-', $sale->date)[1] - 1;
-
-            $amountSales[$index] += $sale->total;
+                $date->day - 1 :
+                $date->month - 1;
+            $amountSales[$index] += $sale->total_bill;
         }
 
         return response()->json(
@@ -70,74 +72,7 @@ class CashFlowController extends Controller
                     'name' => 'Total Penjualan',
                     'data' => $amountSales
                 ]
-
             ]
         );
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
     }
 }

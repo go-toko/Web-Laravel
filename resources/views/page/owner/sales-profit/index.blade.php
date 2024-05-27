@@ -71,7 +71,20 @@
                                     <select name="month" id="month"
                                         class="select @error('month') is-invalid @enderror">
                                         @php
-                                            $months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                                            $months = [
+                                                'January',
+                                                'February',
+                                                'March',
+                                                'April',
+                                                'May',
+                                                'June',
+                                                'July',
+                                                'August',
+                                                'September',
+                                                'October',
+                                                'November',
+                                                'December',
+                                            ];
                                         @endphp
                                         @foreach ($months as $index => $month)
                                             <option value="{{ $index + 1 }}">{{ $month }}</option>
@@ -87,7 +100,6 @@
             </div>
         </div>
     </div>
-
 @endsection
 <?php
 $title = e($__env->yieldContent('title'));

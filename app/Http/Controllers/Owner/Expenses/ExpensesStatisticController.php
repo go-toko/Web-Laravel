@@ -9,6 +9,8 @@ use App\Models\ShopModel;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 
 class ExpensesStatisticController extends Controller
@@ -30,26 +32,27 @@ class ExpensesStatisticController extends Controller
 
     public function getCategoryExpense(Request $request)
     {
-        return response()->json(['category' => ExpensesCategoryModel::where(['shop_id' => $request->shop_id, 'isActive' => true])->get()]);
+        $categories = $this->getListCategory($request);
+        return response()->json(['category' => $categories]);
     }
 
     public function getExpenses(Request $request)
     {
-
+        // init Param
         $shop_id = $request->query('shop_id') ?? ShopModel::where('user_id', Auth::user()->id)->latest()->first()->id;
         $year = $request->query('year') ?? Carbon::now()->year;
+
+        $expenses = ExpensesModel::where(['shop_id' => $shop_id])->whereYear('date', $year);
+
         if ($request->query('month')) {
             $month = $request->query('month');
             $month =  strlen((string)$month) == 1 ? "0$month" : (string)$month;
+            $expenses = $expenses->whereMonth('date', $month);
         }
 
         $categories = $request->query('category') && $request->query('category') != 'all' ?
-            ExpensesCategoryModel::where(['id' => $request->query('category'), 'isActive' => true])->select('id', 'name', 'isActive')->get() :
-            ExpensesCategoryModel::where(['shop_id' => $shop_id, 'isActive' => true])->select('id', 'name', 'isActive')->get();
+            ExpensesCategoryModel::where(['id' => $request->query('category'), 'isActive' => true])->select('id', 'name', 'isActive')->get() : $this->getListCategory($request);
 
-        $expenses = $request->query('month') ?
-            ExpensesModel::where(['shop_id' => $shop_id, 'isActive' => true])->where('date', 'LIKE', "$year-$month%")->get() :
-            ExpensesModel::where(['shop_id' => $shop_id, 'isActive' => true])->where('date', 'LIKE', "$year%")->get();
         $data = [];
         $amounts = !$request->query('month') ? [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         $data["total"] = [
@@ -62,7 +65,7 @@ class ExpensesStatisticController extends Controller
                 'data' => $amounts
             ];
         }
-        foreach ($expenses as $expense) {
+        foreach ($expenses->get() as $expense) {
             $index = $request->query('month') ? explode('-', $expense->date)[2] - 1 : explode('-', $expense->date)[1] - 1;
             $data["total"]["data"][$index] += $expense->amount;
             foreach ($categories as $category) {
@@ -70,5 +73,16 @@ class ExpensesStatisticController extends Controller
             }
         }
         return response()->json(['expense' => $data]);
+    }
+
+    private function getListCategory(Request $request)
+    {
+        $idShop = $request->query('shop_id') ?? ShopModel::where('user_id', Auth::user()->id)->latest()->first()->id;
+        $categories = ExpensesCategoryModel::where(['user_id' => Auth::user()->id, 'isActive' => true, 'isParent' => true])->get();
+        if ($request->query('shop_id')) {
+            $categoriesShop = ExpensesCategoryModel::where(['user_id' => Auth::user()->id, 'shop_id' => $idShop, 'isActive' => true])->get();
+            $categories = $categories->merge($categoriesShop);
+        }
+        return $categories;
     }
 }

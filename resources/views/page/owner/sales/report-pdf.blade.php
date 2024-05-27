@@ -73,23 +73,20 @@
         <thead>
             <tr>
                 <th>No.</th>
-                <th>Nama Pelanggan</th>
                 <th>Tanggal</th>
                 <th>Produk yang dibeli</th>
-                <th>Total harga</th>
+                <th>Total tagihan</th>
                 <th>Total bayar</th>
                 <th>Kembalian</th>
                 <th>Metode Pembayaran</th>
-                <th>Status Pembayaran</th>
-                <th>Keterangan</th>
+                <th>Status</th>
             </tr>
         </thead>
         <tbody>
             @foreach ($sales as $item)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td>{{ Str::headline($item->cashier->userCashierProfile->name) }}</td>
-                    <td>{{ Carbon\Carbon::createFromFormat('Y-m-d', $item->date)->format('d-m-Y') }}</td>
+                    <td>{{ Carbon\Carbon::create($item->created_at)->format('d-m-Y') }}</td>
                     <td>{{ implode(
                         ', ',
                         array_map(function ($item) {
@@ -97,12 +94,11 @@
                         }, $item->detail->toArray()),
                     ) }}
                     </td>
-                    <td>{{ 'Rp' . number_format($item->total) }}</td>
-                    <td>{{ 'Rp' . number_format($item->paid) }}</td>
-                    <td>{{ 'Rp' . number_format($item->change) }}</td>
+                    <td>{{ 'Rp' . number_format($item->total_bill) }}</td>
+                    <td>{{ 'Rp' . number_format($item->total_paid) }}</td>
+                    <td>{{ 'Rp' . number_format($item->changes) }}</td>
                     <td>{{ $item->payment_method }}</td>
-                    <td>{{ $item->payment_status }}</td>
-                    <td>{{ $item->status }}</td>
+                    <td>{{ $displayStatus[array_search($item->status, $status)] }}</td>
                 </tr>
             @endforeach
         </tbody>

@@ -66,7 +66,7 @@
         Periode Pengeluaran:
         {{ request()->query('startDate') ? request()->query('startDate') . ' sampai ' . request()->query('endDate') : 'Semua' }}<br>
         Dicetak oleh: {{ Auth::user()->userProfile->first_name . ' ' . Auth::user()->userProfile->last_name }}<br>
-        Tanggal Cetak: {{ Carbon\Carbon::now()->format('d-m-Y') }}
+        Tanggal Cetak: {{ Carbon\Carbon::now()->translatedFormat('d F Y') }}
     </div>
 
     <table>
@@ -84,11 +84,11 @@
             @foreach ($expenses as $item)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td>{{ Str::headline($item->name) }}</td>
+                    <td>{{ $item->name }}</td>
                     <td>{{ $item->description }}</td>
                     <td>{{ Str::title($item->category->name) }}</td>
                     <td>{{ 'Rp' . number_format($item->amount, 0, ',', '.') }}</td>
-                    <td>{{ Carbon\Carbon::createFromFormat('Y-m-d', $item->date)->format('d-m-Y') }}</td>
+                    <td>{{ Carbon\Carbon::create($item->date)->translatedFormat('d F Y') }}</td>
                 </tr>
             @endforeach
         </tbody>

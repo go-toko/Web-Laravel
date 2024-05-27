@@ -22,12 +22,6 @@
                         </ul>
                     </h6>
                 </div>
-                {{-- <div class="page-btn">
-                    <a href="{{ route('owner.penjualan.penjualan.add') }}" class="btn btn-added">
-                        <img src="{{ URL::asset('assets/img/icons/plus.svg') }}" class="me-1" alt="img">Tambah
-                        Penjualan
-                    </a>
-                </div> --}}
             </div>
 
             {{-- Body Start --}}
@@ -46,9 +40,6 @@
                                         <div class="addonset">
                                             <img src="{{ URL::asset('assets/img/icons/calendars.svg') }}" alt="img" />
                                         </div>
-                                        @error('startDate')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
                                     </div>
                                 </div>
                             </div>
@@ -62,13 +53,38 @@
                                         <div class="addonset">
                                             <img src="{{ URL::asset('assets/img/icons/calendars.svg') }}" alt="img" />
                                         </div>
-                                        @error('endDate')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-12 col-lg-3 col-md-3 offset-lg-3 offset-md-3">
+                            <div class="col-12 col-lg-2 col-md-2">
+                                <div class="form-group" id="paymentMethodField">
+                                    <div class="input-groupicon">
+                                        <select name="payment_method" id="payment_method" class="select">
+                                            <option value="all" selected>Semua</option>
+                                            @foreach ($payment_methods as $method)
+                                                <option value="{{ $method }}"
+                                                    {{ request()->get('payment_method') == $method ? 'selected' : '' }}>
+                                                    {{ $method }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-lg-2 col-md-2">
+                                <div class="form-group" id="statusField">
+                                    <div class="input-groupicon">
+                                        <select name="status" id="status" class="select">
+                                            <option value="all" selected>Semua</option>
+                                            @foreach ($status as $stts)
+                                                <option value="{{ $stts }}"
+                                                    {{ request()->get('status') == $stts ? 'selected' : '' }}>
+                                                    {{ $displayStatus[array_search($stts, $status)] }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-lg-2 col-md-2">
                                 <div class="form-group d-flex align-items-center gap-3">
                                     <a class="btn btn-filters ms-auto" id="filter"><img
                                             src="{{ URL::asset('assets/img/icons/search-whites.svg') }}" alt="img"
@@ -87,34 +103,36 @@
                                 <thead>
                                     <tr>
                                         <th class="col-2">Tanggal</th>
-                                        <th class="col-2">Nama Pelanggan</th>
-                                        <th class="col-1">Total</th>
-                                        <th class="col-1">Jumlah Bayar</th>
-                                        <th class="col-1">Kembalian</th>
+                                        <th class="col-2">Total Tagihan</th>
+                                        <th class="col-2">Total yang dibayar</th>
+                                        <th class="col-2">Kembalian</th>
                                         <th class="col-1">Metode Pembayaran</th>
-                                        <th class="col-1">Status Pembayaran</th>
-                                        <th class="col-2">Kasir</th>
                                         <th class="col-1">Status</th>
+                                        <th class="col-2">Kasir</th>
                                         <th class="col-0">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($sales as $sale)
                                         <tr>
-                                            <td>{{ $sale->date }}</td>
-                                            <td>
-                                                {{ Str::headline($sale->customer_name) }}
+                                            <td>{{ Carbon\Carbon::create($sale->created_at)->translatedFormat('d F Y H:i:s') }}
                                             </td>
-                                            <td>{{ 'Rp' . number_format($sale->total) }}</td>
-                                            <td>{{ 'Rp' . number_format($sale->paid) }}</td>
-                                            <td>{{ 'Rp' . number_format($sale->change) }}</td>
+                                            <td>{{ 'Rp' . number_format($sale->total_bill) }}</td>
+                                            <td>{{ 'Rp' . number_format($sale->total_paid) }}</td>
+                                            <td>{{ 'Rp' . number_format($sale->changes) }}</td>
                                             <td>{{ $sale->payment_method }}</td>
+                                            @php
+                                                $bg = [
+                                                    'bg-lightgreen',
+                                                    'bg-lightyellow',
+                                                    'bg-lightgrey',
+                                                    'bg-lightred',
+                                                ];
+                                            @endphp
                                             <td><span
-                                                    class="badges {{ $sale->payment_status == 'lunas' ? 'bg-lightgreen' : 'bg-lightred' }}">{{ Str::headline($sale->payment_status) }}</span>
+                                                    class="badges d-flex justify-content-center {{ in_array($sale->status, $status) ? $bg[array_search($sale->status, $status)] : '' }}">{{ in_array($sale->status, $status) ? $displayStatus[array_search($sale->status, $status)] : '' }}</span>
                                             </td>
-                                            <td>{{ Str::title($sale->cashier->userCashierProfile->name) }}</td>
-                                            <td><span
-                                                    class="badges @if ($sale->status == 'selesai') bg-lightgreen @elseif($sale->status == 'tertunda') bg-lightyellow @elseif($sale->status == 'batal') bg-lightred @endif">{{ Str::headline($sale->status) }}</span>
+                                            <td>{{ $sale->cashier->userProfile->first_name . ' ' . $sale->cashier->userProfile->last_name }}
                                             </td>
                                             <td>
                                                 <a class="me-1"
@@ -132,7 +150,6 @@
             </div>
         </div>
     </div>
-
 @endsection
 <?php
 $title = e($__env->yieldContent('title'));
@@ -154,16 +171,31 @@ $msg = Session::get($type);
         </script>
     @endif
     <script>
+        $(window).ready(function() {
+            $('.select').select2();
+        })
+
         $(document).on('click', '#filter', function() {
-            if (!$('#startDate').val() || $('#startDate').val() === '') {
+            const paymentMethod = $('#payment_method').val();
+            const status = $('#status').val();
+
+            if ((!$('#startDate').val() || $('#startDate').val() === '') && paymentMethod == 'all' && status ==
+                'all') {
                 $('#startDateField').append(
                     `<div class="invalid-feedback" style="display: block">*Harap pilih tanggal awal untuk filter</div>`
+                )
+                $('#paymentMethodField').append(
+                    `<div class="invalid-feedback" style="display: block">*Harap pilih selain "Semua"</div>`
+                )
+                $('#statusField').append(
+                    `<div class="invalid-feedback" style="display: block">*Harap pilih selain "Semua"</div>`
                 )
                 setTimeout(() => {
                     $('.invalid-feedback').remove()
                 }, 2000);
                 return;
             };
+
             const currentDate = new Date();
             let dateYear = currentDate.getFullYear();
             let dateMonth = currentDate.getMonth() + 1;
@@ -174,7 +206,7 @@ $msg = Session::get($type);
             const startDate = $('#startDate').val();
             const endDate = $('#endDate').val() ? $('#endDate').val() : `${dateDay}-${dateMonth}-${dateYear}`;
             window.location.href =
-                `{{ route('owner.penjualan.penjualan.index') }}?startDate=${startDate}&endDate=${endDate}`
+                `{{ route('owner.penjualan.penjualan.index') }}?startDate=${startDate}&endDate=${endDate}&payment_method=${paymentMethod}&status=${status}`
         })
 
         $(document).on('click', '#resetFilter', function(event) {
@@ -191,6 +223,9 @@ $msg = Session::get($type);
         })
 
         $(document).on('click', '#reportPdf', function() {
+            const paymentMethod = $('#payment_method').val();
+            const status = $('#status').val();
+
             const currentDate = new Date();
             let dateYear = currentDate.getFullYear();
             let dateMonth = currentDate.getMonth() + 1;
@@ -201,11 +236,14 @@ $msg = Session::get($type);
             const startDate = $('#startDate').val();
             const endDate = $('#endDate').val() ? $('#endDate').val() : `${dateDay}-${dateMonth}-${dateYear}`;
             const url =
-                `{{ route('owner.penjualan.penjualan.reportPdf') }}?startDate=${startDate}&endDate=${endDate}`
+                `{{ route('owner.penjualan.penjualan.reportPdf') }}?startDate=${startDate}&endDate=${endDate}&payment_method=${paymentMethod}&status=${status}`
             window.open(url, '_blank')
         })
 
         $(document).on('click', '#reportExcel', function() {
+            const paymentMethod = $('#payment_method').val();
+            const status = $('#status').val();
+
             const currentDate = new Date();
             let dateYear = currentDate.getFullYear();
             let dateMonth = currentDate.getMonth() + 1;
@@ -216,7 +254,7 @@ $msg = Session::get($type);
             const startDate = $('#startDate').val();
             const endDate = $('#endDate').val() ? $('#endDate').val() : `${dateDay}-${dateMonth}-${dateYear}`;
             const url =
-                `{{ route('owner.penjualan.penjualan.reportExcel') }}?startDate=${startDate}&endDate=${endDate}`
+                `{{ route('owner.penjualan.penjualan.reportExcel') }}?startDate=${startDate}&endDate=${endDate}&payment_method=${paymentMethod}&status=${status}`
             window.open(url, '_blank')
         })
     </script>

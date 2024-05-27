@@ -44,7 +44,7 @@
                                             <input id="name" name="name" type="text"
                                                 @if (isset($data))  @endif
                                                 class="form-control @error('name') is-invalid @enderror"
-                                                value="{{ Str::headline(old('name') ?? ($data->name ?? null)) }}" autofocus>
+                                                value="{{ (old('name') ?? ($data->name ?? null)) }}" autofocus>
                                             @error('name')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -56,7 +56,7 @@
                                             <input id="phone" name="phone" type="text"
                                                 @if (isset($data))  @endif
                                                 class="form-control @error('phone') is-invalid @enderror"
-                                                value="{{ Str::headline(old('phone') ?? ($data->phone ?? null)) }}"
+                                                value="{{ (old('phone') ?? ($data->phone ?? null)) }}"
                                                 autofocus>
                                             @error('phone')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -69,7 +69,7 @@
                                             <input id="address" name="address" type="text"
                                                 @if (isset($data))  @endif
                                                 class="form-control @error('address') is-invalid @enderror"
-                                                value="{{ Str::headline(old('address') ?? ($data->address ?? null)) }}"
+                                                value="{{ (old('address') ?? ($data->address ?? null)) }}"
                                                 autofocus>
                                             @error('address')
                                                 <div class="invalid-feedback">{{ $message }}</div>

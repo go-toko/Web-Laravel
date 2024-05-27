@@ -43,30 +43,40 @@
                                 </div>
                                 <div class="row my-2" style="padding-left: 5px">
                                     <div class="col-lg-4 col-md-4 col-sm-4 col-12">
-                                        <h6 style="color: #7367F0" class="my-1">Informasi Pelanggan</h6>
-                                        <p>{{ $sale->customer_name }}</p>
+                                        <h6 style="color: #7367F0" class="my-1">Informasi Penjualan</h6>
+                                        <div class="d-flex justify-content-between">
+                                            <p>Dibuat pada </p>
+                                            <p>{{ Carbon\Carbon::create($sale->created_at)->translatedFormat('d F Y H:i:s') }}
+                                            </p>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <p>Terakhir diubah pada </p>
+                                            <p>{{ Carbon\Carbon::create($sale->updated_at)->translatedFormat('d F Y H:i:s') }}
+                                            </p>
+                                        </div>
                                     </div>
                                     <div class="col-lg-4 col-md-4 col-sm-4 col-12">
                                         <h6 style="color: #7367F0" class="my-1">Informasi Toko</h6>
-                                        <p>{{ Str::headline($sale->shop->name) }}</p>
-                                        <p>{{ $sale->shop->user->email }}</p>
-                                        <p>{{ $sale->shop->user->userProfile->phone }}</p>
+                                        <p>{{ $sale->shop->name }}</p>
+                                        <p>{{ $sale->shop->description }}</p>
                                         <p>{{ Str::title($sale->shop?->address ? $sale->shop->address . ', ' . $sale->shop->village . ', ' . $sale->shop->district . ', ' . $sale->shop->regency . ', ' . $sale->shop->province : $sale->shop->village . ', ' . $sale->shop->district . ', ' . $sale->shop->regency . ', ' . $sale->shop->province) }}
                                         </p>
                                     </div>
+                                    @php
+                                        $bg = ['bg-lightgreen', 'bg-lightyellow', 'bg-lightgrey', 'bg-lightred'];
+                                    @endphp
                                     <div class="col-lg-4 col-md-4 col-sm-4 col-12">
                                         <h6 style="color: #7367F0" class="my-1">Informasi Pembayaran</h6>
                                         <div class="d-flex justify-content-between">
                                             <p>Metode Pembayaran</p>
-                                            <p style="color: #2E7D32">{{ $sale->payment_method }}</p>
+                                            <p>{{ $sale->payment_method }}</p>
                                         </div>
                                         <div class="d-flex justify-content-between">
                                             <p>Status Pembayaran</p>
-                                            <p style="color: #2E7D32">{{ Str::ucfirst($sale->payment_status) }}</p>
-                                        </div>
-                                        <div class="d-flex justify-content-between">
-                                            <p>Status</p>
-                                            <p style="color: #2E7D32">{{ Str::ucfirst($sale->status) }}</p>
+                                            <p
+                                                class="badges {{ in_array($sale->status, $status) ? $bg[array_search($sale->status, $status)] : '' }}">
+                                                {{ in_array($sale->status, $status) ? $displayStatus[array_search($sale->status, $status)] : '' }}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -86,14 +96,15 @@
                                             @foreach ($sale->detail as $detail)
                                                 <tr>
                                                     <td>
-                                                        {{ Str::headline($detail->product->name) }}
+                                                        {{ $detail->name }}
                                                     </td>
                                                     <td class="text-end">{{ $detail->quantity }}
                                                         {{ Str::lower($detail->product->unit) }}
                                                     </td>
-                                                    <td class="formatRupiah text-end">{{ $detail->unit_price }}</td>
-                                                    <td class="formatRupiah text-end">
-                                                        {{ $detail->unit_price * $detail->quantity }}
+                                                    <td class="text-end">{{ 'Rp' . number_format($detail->unit_price) }}
+                                                    </td>
+                                                    <td class="text-end">
+                                                        {{ 'Rp' . number_format($detail->unit_price * $detail->quantity) }}
                                                     </td>
                                                 </tr>
                                             @endforeach
@@ -107,8 +118,20 @@
                                         <div class="total-order w-100 max-widthauto m-auto mb-4">
                                             <ul>
                                                 <li class="total">
-                                                    <h4>Total</h4>
-                                                    <h5 class="formatRupiah">{{ $sale->total }}</h5>
+                                                    <h4>Total tagihan</h4>
+                                                    <h5>{{ 'Rp' . number_format($sale->total_bill) }}</h5>
+                                                </li>
+                                            </ul>
+                                            <ul>
+                                                <li class="total">
+                                                    <h4>Jumlah yang dibayarkan</h4>
+                                                    <h5>{{ 'Rp' . number_format($sale->total_paid) }}</h5>
+                                                </li>
+                                            </ul>
+                                            <ul>
+                                                <li class="total">
+                                                    <h4>Kembalian</h4>
+                                                    <h5>{{ 'Rp' . number_format($sale->changes) }}</h5>
                                                 </li>
                                             </ul>
                                         </div>
@@ -120,62 +143,6 @@
                                 </div>
                             </div>
                         </div>
-                        {{-- <div class="table-responsive">
-                            <table class="table datanew">
-                                <thead>
-                                    <tr>
-                                        <th class="col-1">Tanggal</th>
-                                        <th class="col-2">Nama Pelanggan</th>
-                                        <th class="col-1">Total</th>
-                                        <th class="col-1">Jumlah Bayar</th>
-                                        <th class="col-1">Kembalian</th>
-                                        <th class="col-1">Metode Pembayaran</th>
-                                        <th class="col-1">Status Pembayaran</th>
-                                        <th class="col-2">Kasir</th>
-                                        <th class="col-1">Status</th>
-                                        <th class="col-1">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($sales as $sale)
-                                        <tr>
-                                            <td>{{ $sale->date }}</td>
-                                            <td>
-                                                {{ Str::headline($sale->customer_name) }}
-                                            </td>
-                                            <td class="formatRupiah">{{ $sale->total }}</td>
-                                            <td class="formatRupiah">{{ $sale->paid }}</td>
-                                            <td class="formatRupiah">{{ $sale->change }}</td>
-                                            <td>{{ $sale->payment_method }}</td>
-                                            <td><span
-                                                    class="badges {{ $sale->payment_status == 'lunas' ? 'bg-lightgreen' : 'bg-lightred' }}">{{ Str::headline($sale->payment_status) }}</span>
-                                            </td>
-                                            <td>{{ Str::title($sale->cashier->userCashierProfile->name) }}</td>
-                                            <td><span
-                                                    class="badges @if ($sale->status == 'selesai') bg-lightgreen @elseif($sale->status == 'tertunda') bg-lightyellow @elseif($sale->status == 'batal') bg-lightred @endif">{{ Str::headline($sale->status) }}</span>
-                                            </td>
-                                            <td>
-                                                <a class="me-1 detail-cashier" data-bs-toggle="modal"
-                                                    data-bs-target="#exampleModal"
-                                                    data-url="{{ route('owner.orang.kasir.getCashierByUsername', ['username' => $cashier->username]) }}">
-                                                    <img src="{{ URL::asset('assets/img/icons/eye.svg') }}" alt="eye">
-                                                </a>
-                                                <a class="me-3"
-                                                    href="{{ route('owner.penjualan.penjualan.edit', ['id' => Crypt::encrypt($sale->id)]) }}">
-                                                    <img src="{{ URL::asset('assets/img/icons/edit.svg') }}"
-                                                        alt="img" />
-                                                </a>
-                                                <a class="me-3" id="confirm-delete"
-                                                    data-action="{{ route('owner.penjualan.penjualan.delete', ['id' => Crypt::encrypt($sale->id)]) }}">
-                                                    <img src="{{ URL::asset('assets/img/icons/delete.svg') }}"
-                                                        alt="img" />
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div> --}}
                     </section>
                 </div>
             </div>
@@ -203,70 +170,4 @@ $msg = Session::get($type);
             toastr[type](msg, title)
         </script>
     @endif
-    <script>
-        function formatRupiah(angka, prefix) {
-            var number_string = angka.replace(/[^,\d]/g, '').toString(),
-                split = number_string.split(','),
-                sisa = split[0].length % 3,
-                rupiah = split[0].substr(0, sisa),
-                ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-
-            if (ribuan) {
-                separator = sisa ? '.' : '';
-                rupiah += separator + ribuan.join('.');
-            }
-
-            rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
-            return prefix == undefined ? rupiah : (rupiah ? prefix + rupiah : '');
-        }
-
-        $(document).ready(function() {
-            $('.formatRupiah').each(function() {
-                $(this).text(formatRupiah($(this).text(), 'Rp'));
-            })
-        })
-
-        $(document).on('click', '#confirm-delete', function(event) {
-            event.preventDefault();
-            const url = $(this).data('action');
-
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc3545',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url,
-                        headers: {
-                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                        },
-                        type: 'DELETE',
-                        success: function(data) {
-                            Swal.fire({
-                                title: 'Deleted!',
-                                text: data.msg,
-                                icon: 'success',
-                                timer: 1500,
-                                showConfirmButton: false
-                            });
-                            location.reload();
-                        },
-                        error: function(data) {
-                            Swal.fire({
-                                title: 'Oops...',
-                                text: data.msg,
-                                icon: 'error',
-                                confirmButtonColor: '#dc3545'
-                            })
-                        }
-                    });
-                }
-            });
-        });
-    </script>
 @endsection

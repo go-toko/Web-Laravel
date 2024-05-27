@@ -14,7 +14,7 @@
         @foreach ($suppliers as $item)
             <tr>
                 <td>{{ $loop->iteration }}</td>
-                <td>{{ Str::headline($item->name) }}</td>
+                <td>{{ $item->name }}</td>
                 <td>{{ $item->phone }}</td>
                 <td>{{ $item->address }}</td>
                 <td>{{ $item->description }}</td>

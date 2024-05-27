@@ -13,11 +13,11 @@
         @foreach ($expenses as $item)
             <tr>
                 <td>{{ $loop->iteration }}</td>
-                <td>{{ Str::headline($item->name) }}</td>
+                <td>{{ $item->name }}</td>
                 <td>{{ $item->description }}</td>
                 <td>{{ Str::title($item->category->name) }}</td>
                 <td>{{ 'Rp' . number_format($item->amount, 0, ',', '.') }}</td>
-                <td>{{ Carbon\Carbon::createFromFormat('Y-m-d', $item->date)->format('d-m-Y') }}</td>
+                <td>{{ Carbon\Carbon::create($item->date)->translatedFormat('d F Y') }}</td>
             </tr>
         @endforeach
     </tbody>

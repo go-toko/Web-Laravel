@@ -11,9 +11,9 @@
         @foreach ($brands as $item)
             <tr>
                 <td>{{ $loop->iteration }}</td>
-                <td>{{ Str::headline($item->name) }}</td>
+                <td>{{ $item->name }}</td>
                 <td>{{ $item->description }}</td>
-                <td>{{ $item->created_at->format('d-m-Y') }}</td>
+                <td>{{ Carbon\Carbon::create($item->created_at)->translatedFormat('d F Y') }}</td>
             </tr>
         @endforeach
     </tbody>

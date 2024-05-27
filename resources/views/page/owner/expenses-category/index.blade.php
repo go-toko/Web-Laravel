@@ -38,15 +38,8 @@
                             <table class="table datanew">
                                 <thead>
                                     <tr>
-                                        <th class="col-0">
-                                            <label class="checkboxs">
-                                                <input type="checkbox" id="select-all" />
-                                                <span class="checkmarks"></span>
-                                            </label>
-                                        </th>
-                                        <th class="col-3">Nama Kategori</th>
+                                        <th class="col-4">Nama Kategori</th>
                                         <th class="col-6">Deskripsi</th>
-                                        <th class="col-1">Status</th>
                                         <th class="col-2">Aksi</th>
                                     </tr>
                                 </thead>
@@ -54,16 +47,9 @@
                                     @foreach ($categories as $category)
                                         <tr>
                                             <td>
-                                                <label class="checkboxs">
-                                                    <input type="checkbox" />
-                                                    <span class="checkmarks"></span>
-                                                </label>
-                                            </td>
-                                            <td>
                                                 {{ Str::title($category->name) }}
                                             </td>
                                             <td>{{ $category->description }}</td>
-                                            <td>{{ $category->status }}</td>
                                             <td>
                                                 <a class="me-3"
                                                     href="{{ route('owner.pengeluaran.kategori.edit', ['id' => Crypt::encrypt($category->id)]) }}">
@@ -86,7 +72,6 @@
             </div>
         </div>
     </div>
-
 @endsection
 <?php
 $title = e($__env->yieldContent('title'));

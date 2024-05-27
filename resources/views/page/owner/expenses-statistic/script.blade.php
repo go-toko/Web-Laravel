@@ -86,13 +86,13 @@
         function runSpinner() {
             $('#expense-chart').empty();
             $('#expense-chart').append(`<div class="row">
-                            <div class="col-2 mx-auto">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <strong>Loading...</strong>
-                                    <div class="spinner-border" role="status" aria-hidden="true"></div>
-                                </div>
+                        <div class="col-2 mx-auto">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <strong>Loading...</strong>
+                                <div class="spinner-border" role="status" aria-hidden="true"></div>
                             </div>
-                        </div>`)
+                        </div>
+                    </div>`)
         }
 
         function showField(...idField) {
@@ -109,8 +109,9 @@
 
         async function showDataYear() {
             let dataExpense;
+            let category = 'all';
             let url =
-                `{{ route('owner.pengeluaran.statistik.pengeluaran') }}?shop_id=${$('#shop_id').val()}&year=${$('#year').val()}&category=${$('#category').val()}`;
+                `{{ route('owner.pengeluaran.statistik.pengeluaran') }}?shop_id=${$('#shop_id').val()}&year=${$('#year').val()}&category=${$('#category').val() ?? category}`;
             await $.ajax({
                 url,
                 headers: {
@@ -183,8 +184,12 @@
         }
 
         $(document).ready(async function() {
-            showDataYear();
-            renderDataCategory();
+            try {
+                await showDataYear();
+                await renderDataCategory();
+            } catch (error) {
+                console.log(error);
+            }
         })
 
         $(document).on('change', '#shop_id', async function() {
@@ -194,8 +199,8 @@
             hideField('monthField');
             $('#filter').empty();
             $('#filter').append(`<option value="null" selected disabled>-- Select --</option>
-                                        <option value="year" selected>Tahun</option>
-                                        <option value="month">Bulan</option>`);
+                                    <option value="year" selected>Tahun</option>
+                                    <option value="month">Bulan</option>`);
         })
 
         $(document).on('change', '#filter', async function() {

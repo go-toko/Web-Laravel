@@ -17,7 +17,7 @@
         @foreach ($sales as $item)
             <tr>
                 <td>{{ $loop->iteration }}</td>
-                <td>{{ Str::headline($item->cashier->userCashierProfile->name) }}</td>
+                <td>{{ $item->cashier->userCashierProfile->name }}</td>
                 <td>{{ Carbon\Carbon::createFromFormat('Y-m-d', $item->date)->format('d-m-Y') }}</td>
                 <td>{{ implode(
                     ', ',

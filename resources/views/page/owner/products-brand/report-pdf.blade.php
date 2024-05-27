@@ -63,9 +63,9 @@
     <div class="laporan-info">
         Aplikasi: Go-Toko<br>
         Laporan: List Merek Produk<br>
-        Toko: {{ Str::headline(Session::get('name')) ?? 'Semua Toko' }}<br>
+        Toko: {{ Session::get('name') ?? 'Semua Toko' }}<br>
         Dicetak oleh: {{ Auth::user()->userProfile->first_name . ' ' . Auth::user()->userProfile->last_name }}<br>
-        Tanggal Cetak: {{ Carbon\Carbon::now()->format('d-m-Y') }}
+        Tanggal Cetak: {{ Carbon\Carbon::now()->translatedFormat('d F Y') }}
     </div>
 
     <table>
@@ -81,9 +81,9 @@
             @foreach ($brands as $item)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td>{{ Str::headline($item->name) }}</td>
+                    <td>{{ $item->name }}</td>
                     <td>{{ $item->description }}</td>
-                    <td>{{ $item->created_at->format('d-m-Y') }}</td>
+                    <td>{{ Carbon\Carbon::create($item->created_at)->translatedFormat('d F Y') }}</td>
                 </tr>
             @endforeach
         </tbody>

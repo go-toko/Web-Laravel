@@ -86,13 +86,13 @@
                                                         @foreach ($products as $item)
                                                             <option value="{{ $item->id }}"
                                                                 @if ($item->id == $data->detail[0]->product_id) selected @endif>
-                                                                {{ Str::headline($item->name) }} - {{ $item->unit }}
+                                                                {{ $item->name }} - {{ $item->unit }}
                                                             </option>
                                                         @endforeach
                                                     </select>
                                                 </div>
                                             </div>
-                                            <div class="col-lg-3 col-sm-6 col-12">
+                                            <div class="col-lg-2 col-sm-6 col-12">
                                                 <div class="form-group">
                                                     <label>Banyaknya</label>
                                                     <input id="quantity[0]" name="quantity[0]" type="number"
@@ -105,7 +105,7 @@
                                                     @enderror
                                                 </div>
                                             </div>
-                                            <div class="col-lg-3 col-sm-6 col-12">
+                                            <div class="col-lg-2 col-sm-6 col-12">
                                                 <div class="form-group">
                                                     <label>Harga Beli</label>
                                                     <input id="price_buy[0]" name="price_buy[0]" type="text"
@@ -114,6 +114,19 @@
                                             @enderror"
                                                         value="{{ old('price_buy[0]') ?? ($data->detail[0]->price_buy ?? null) }}">
                                                     @error('price_buy[0]')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-2 col-sm-6 col-12">
+                                                <div class="form-group">
+                                                    <label>Harga Jual Terbaru</label>
+                                                    <input id="price_sell[0]" name="price_sell[0]" type="text"
+                                                        class="form-control formatRupiah @error('price_sell[0]')
+                                                is-invalid
+                                            @enderror"
+                                                        value="{{ old('price_sell[0]') ?? ($data->detail[0]->product->price_sell ?? null) }}">
+                                                    @error('price_sell[0]')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
@@ -197,8 +210,8 @@ $msg = Session::get($type);
         var index = 0;
         $(document).ready(function() {
             const data = JSON.parse(`{!! $data !!}`)
-            console.log(data);
             data.detail.forEach((detail, idx) => {
+                console.log(detail);
                 if (idx == 0) return;
                 index++;
                 $('#dynamicInput').append(`
@@ -211,25 +224,33 @@ $msg = Session::get($type);
                                                     <option disabled selected>Pilih...</option>
                                                     @foreach ($products as $item)
                                                         <option value="{{ $item->id }}" ${'{!! $item->id !!}' == detail.product_id ? 'selected' : null}>
-                                                            {{ Str::headline($item->name) }} - {{ $item->unit }}
+                                                            {{ $item->name }} - {{ $item->unit }}
                                                         </option>
                                                     @endforeach
                                                 </select>
                                             </div>
                                         </div>
-                                        <div class="col-lg-3 col-sm-6 col-12">
+                                        <div class="col-lg-2 col-sm-6 col-12">
                                             <div class="form-group">
                                                 <label>Banyaknya</label>
                                                 <input id="quantity[${index}]" name="quantity[${index}]" type="number"
                                                     class="form-control" value="${detail.quantity}">
                                             </div>
                                         </div>
-                                        <div class="col-lg-3 col-sm-6 col-12">
+                                        <div class="col-lg-2 col-sm-6 col-12">
                                             <div class="form-group">
                                                 <label>Harga Beli</label>
                                                 <input id="price_buy[${index}]" name="price_buy[${index}]" type="text"
                                                     class="form-control formatRupiah"
                                                     value="${detail.price_buy}">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-2 col-sm-6 col-12">
+                                            <div class="form-group">
+                                                <label>Harga Beli</label>
+                                                <input id="price_sell[${index}]" name="price_sell[${index}]" type="text"
+                                                    class="form-control formatRupiah"
+                                                    value="${detail.product.price_sell}">
                                             </div>
                                         </div>
                                         <div class="col-lg-3 col-sm-6 col-12" style="margin-top: 29px">
@@ -254,33 +275,46 @@ $msg = Session::get($type);
                                                         <option value="" disabled selected>Pilih...</option>
                                                         @foreach ($products as $item)
                                                             <option value="{{ $item->id }}">
-                                                                {{ Str::headline($item->name) }} - {{ $item->unit }}</option>
+                                                                {{ $item->name }} - {{ $item->unit }}</option>
                                                         @endforeach
                                                     </select>
                                                 </div>
                                             </div>
-                                            <div class="col-lg-3 col-sm-6 col-12">
+                                            <div class="col-lg-2 col-sm-6 col-12">
                                                 <div class="form-group">
                                                     <label>Banyaknya</label>
                                                     <input id="quantity[${index}]" name="quantity[${index}]" type="number"
                                                         class="form-control @error('quantity[${index}]')
                                                 is-invalid
                                             @enderror"
-                                                        value="{{ old('quantity[${index}]') ?? ($data->quantity ?? null) }}">
+                                                        value="{{ old('quantity[${index}]') ?? null }}">
                                                     @error('quantity[${index}]')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
                                             </div>
-                                            <div class="col-lg-3 col-sm-6 col-12">
+                                            <div class="col-lg-2 col-sm-6 col-12">
                                                 <div class="form-group">
                                                     <label>Harga Beli</label>
                                                     <input id="price_buy[${index}]" name="price_buy[${index}]" type="text"
                                                         class="form-control formatRupiah @error('price_buy[${index}]')
                                                 is-invalid
                                             @enderror"
-                                                        value="{{ old('price_buy[${index}]') ?? ($data->price_buy ?? null) }}">
+                                                        value="{{ old('price_buy[${index}]') ?? null }}">
                                                     @error('price_buy[${index}]')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-2 col-sm-6 col-12">
+                                                <div class="form-group">
+                                                    <label>Harga Jual Terbaru</label>
+                                                    <input id="price_sell[${index}]" name="price_sell[${index}]" type="text"
+                                                        class="form-control formatRupiah @error('price_sell[${index}]')
+                                                is-invalid
+                                            @enderror"
+                                                        value="{{ old('price_sell[${index}]') ?? null }}">
+                                                    @error('price_sell[${index}]')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>

@@ -5,12 +5,9 @@ namespace App\Http\Controllers\Owner\Expenses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Owner\ExpensesCategoryValidate;
 use App\Models\ExpensesCategoryModel;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Str;
 
 class ExpensesCategoryController extends Controller
 {
@@ -21,10 +18,10 @@ class ExpensesCategoryController extends Controller
      */
     public function index()
     {
-        $categories = ExpensesCategoryModel::where(['isActive' =>  true, 'isParent' => true])->get();
+        $categories = ExpensesCategoryModel::where(['user_id' => Auth::user()->id, 'isActive' =>  true, 'isParent' => true])->get();
         if (Session::has('active')) {
             $id = Crypt::decrypt(Session::get('active'));
-            $categoriesExpensesOnShop = ExpensesCategoryModel::where(['isActive' => true, 'shop_id' => $id])->get();
+            $categoriesExpensesOnShop = ExpensesCategoryModel::where(['user_id' => Auth::user()->id, 'isActive' => true, 'shop_id' => $id])->get();
             $categories = $categories->merge($categoriesExpensesOnShop);
         }
         return view('page.owner.expenses-category.index', [
@@ -51,15 +48,17 @@ class ExpensesCategoryController extends Controller
     public function store(ExpensesCategoryValidate $request)
     {
         try {
-            $request['name'] = Str::lower($request->name);
+            $request['name'] = $request->name;
             if (Session::has('active')) {
                 ExpensesCategoryModel::create([
+                    'user_id' => Auth::user()->id,
                     'name' => $request->name,
                     'description' => $request->description,
                     'shop_id' => Crypt::decrypt(Session::get('active')),
                 ]);
             } else {
                 ExpensesCategoryModel::create([
+                    'user_id' => Auth::user()->id,
                     'name' => $request->name,
                     'description' => $request->description,
                     'isParent' => true,
@@ -108,7 +107,7 @@ class ExpensesCategoryController extends Controller
     {
         try {
             ExpensesCategoryModel::where(['id' => Crypt::decrypt($id)])->update([
-                'name' => Str::lower($request->name),
+                'name' => $request->name,
                 'description' => $request->description,
             ]);
         } catch (\Throwable $th) {

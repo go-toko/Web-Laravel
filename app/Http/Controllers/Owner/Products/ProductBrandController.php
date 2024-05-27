@@ -2,14 +2,18 @@
 
 namespace App\Http\Controllers\Owner\Products;
 
+use App\Exports\OwnerReportExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Owner\BrandValidate;
 use App\Models\ProductBrand;
+use Dompdf\Dompdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProductBrandController extends Controller
 {
@@ -20,12 +24,7 @@ class ProductBrandController extends Controller
      */
     public function index()
     {
-        $brands = ProductBrand::where(['isActive' => true, 'isParent' => true])->get();
-        if (Session::has('active')) {
-            $idShop = Crypt::decrypt(Session::get('active'));
-            $brandsShop = ProductBrand::where(['shop_id' => $idShop, 'isActive' => true])->get();
-            $brands = $brands->merge($brandsShop);
-        }
+        $brands = $this->getBrands();
         return view('page.owner.products-brand.index', [
             'brands' => $brands
         ]);
@@ -60,13 +59,15 @@ class ProductBrandController extends Controller
             if (Session::has('active')) {
                 $idShop = Crypt::decrypt(Session::get('active'));
                 ProductBrand::create([
+                    'user_id' => Auth::user()->id,
                     'shop_id' => $idShop,
-                    'name' => Str::lower($request->name),
+                    'name' => $request->name,
                     'description' => $request->description,
                     'images' => $filename,
                 ]);
             } else {
                 ProductBrand::create([
+                    'user_id' => Auth::user()->id,
                     'name' => $request->name,
                     'description' => $request->description,
                     'images' => $filename,
@@ -74,9 +75,9 @@ class ProductBrandController extends Controller
                 ]);
             }
         } catch (\Throwable $th) {
-            return back()->with(['error' => 'Failed to add data', 'type' => 'error']);
+            return back()->with(['error' => 'Gagal menambahkan merek', 'type' => 'error']);
         }
-        return redirect(route('owner.products.brand.index'))->with(['success' => 'Success to add new brand ✅', 'type' => 'success']);
+        return redirect(route('owner.produk.merek.index'))->with(['success' => 'Berhasil menambahkan merek ✅', 'type' => 'success']);
     }
 
     /**
@@ -129,15 +130,15 @@ class ProductBrandController extends Controller
                 $filename = $data->images;
             }
             $data->update([
-                'name' => Str::lower($request->name),
+                'name' => $request->name,
                 'code' => $request->code,
                 'description' => $request->description,
                 'image' => $filename,
             ]);
         } catch (\Throwable $th) {
-            return back()->with(['type' => 'error', 'error' => 'Something wrong']);
+            return back()->with(['type' => 'error', 'error' => 'Gagal mengubah merek']);
         }
-        return redirect(route('owner.products.brand.index'))->with(['type' => 'success', 'success' => 'Success change brand']);
+        return redirect(route('owner.produk.merek.index'))->with(['type' => 'success', 'success' => 'Berhasil mengubah merek']);
     }
 
     /**
@@ -164,5 +165,44 @@ class ProductBrandController extends Controller
             return response()->json(['status' => 'error']);
         }
         return response()->json(['status' => 'success']);
+    }
+
+    public function reportPdf()
+    {
+        $brands = $this->getBrands();
+        $brands = $brands->sortByDesc('created_at');
+
+        $html = view('page.owner.products-brand.report-pdf', ['brands' => $brands]);
+
+        // Dompdf
+        $pdf = new Dompdf();
+        $pdf->loadHtml($html);
+        $pdf->setPaper('A4', 'landscape');
+
+        $pdf->render();
+
+        return $pdf->stream(time() . '-laporan-brand-produk.pdf');
+    }
+
+    public function reportExcel()
+    {
+        $brands = $this->getBrands();
+        $brands = $brands->sortByDesc('created_at');
+
+        $view = view('page.owner.products-brand.report-excel', ['brands' => $brands]);
+
+        return Excel::download(new OwnerReportExport($view), time() . '-laporan-brand-produk.xlsx');
+    }
+
+    private function getBrands()
+    {
+        $brands = ProductBrand::where(['user_id' => Auth::user()->id, 'isActive' => true, 'isParent' => true])->get();
+        if (Session::has('active')) {
+            $idShop = Crypt::decrypt(Session::get('active'));
+            $brandsShop = ProductBrand::where(['user_id' => Auth::user()->id, 'shop_id' => $idShop, 'isActive' => true])->get();
+            $brands = $brands->merge($brandsShop);
+        }
+
+        return $brands;
     }
 }

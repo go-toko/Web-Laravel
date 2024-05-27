@@ -1,7 +1,7 @@
 <?php $page = 'menus'; ?>
 @extends('layout.mainlayout')
 
-@section('title', 'Products Category')
+@section('title', 'Kategori Produk')
 
 @section('forhead')
     {{-- Toastr Style --}}
@@ -23,64 +23,52 @@
                     </h6>
                 </div>
                 <div class="page-btn">
-                    <a href="{{ route('owner.products.category.add') }}" class="btn btn-added">
-                        <img src="{{ URL::asset('assets/img/icons/plus.svg') }}" class="me-1" alt="img">Add Category
+                    <a href="{{ route('owner.produk.kategori.add') }}" class="btn btn-added">
+                        <img src="{{ URL::asset('assets/img/icons/plus.svg') }}" class="me-1" alt="img">Tambah
+                        Kategori
                     </a>
                 </div>
             </div>
-
             {{-- Body Start --}}
             <div class="row">
                 <div class="col-sm-12">
                     <section class="comp-section">
+                        <div class="row">
+                            <div class="col-12 d-flex justify-content-end">
+                                <div class="form-group d-flex align-items-center gap-3">
+                                    <a data-bs-toggle="tooltip" data-bs-placement="top" title="PDF" id="reportPdf"><img
+                                            src="{{ URL::asset('assets/img/icons/pdf.svg') }}" alt="img"></a>
+                                    <a data-bs-toggle="tooltip" data-bs-placement="top" title="Excel" id="reportExcel"><img
+                                            src="{{ URL::asset('assets/img/icons/excel.svg') }}" alt="img"></a>
+                                </div>
+                            </div>
+                        </div>
                         <div class="table-responsive">
                             <table class="table datanew">
                                 <thead>
                                     <tr>
-                                        <th class="col-0">
-                                            <label class="checkboxs">
-                                                <input type="checkbox" id="select-all" />
-                                                <span class="checkmarks"></span>
-                                            </label>
-                                        </th>
-                                        <th class="col-3">Category name</th>
-                                        <th class="col-2">Category Code</th>
-                                        <th class="col-5">Description</th>
-                                        <th class="col-2">Action</th>
+                                        <th class="col-3">Nama Kategori</th>
+                                        <th class="col-2">Kode Kategori</th>
+                                        <th class="col-5">Deskripsi</th>
+                                        <th class="col-2">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($categories as $category)
                                         <tr>
                                             <td>
-                                                <label class="checkboxs">
-                                                    <input type="checkbox" />
-                                                    <span class="checkmarks"></span>
-                                                </label>
-                                            </td>
-                                            <td class="productimgname">
-                                                <a href="javascript:void(0);" class="product-img">
-                                                    @if ($category->images != 'noimage.png')
-                                                        <img src="{{ URL::asset('images/category/' . $category->images) }}"
-                                                            alt="{{ Str::headline($category->name) }}" />
-                                                    @elseif ($category->images == 'noimage.png')
-                                                        <img src="{{ URL::asset('images/' . $category->images) }}"
-                                                            alt="{{ Str::headline($category->name) }}" />
-                                                    @endif
-
-                                                </a>
-                                                {{ Str::headline($category->name) }}
+                                                {{ $category->name }}
                                             </td>
                                             <td>{{ $category->code }}</td>
                                             <td>{{ $category->description }}</td>
                                             <td>
                                                 <a class="me-3"
-                                                    href="{{ route('owner.products.category.edit', ['id' => Crypt::encrypt($category->id)]) }}">
+                                                    href="{{ route('owner.produk.kategori.edit', ['id' => Crypt::encrypt($category->id)]) }}">
                                                     <img src="{{ URL::asset('assets/img/icons/edit.svg') }}"
                                                         alt="img" />
                                                 </a>
                                                 <a class="me-3" id="confirm-delete"
-                                                    data-action="{{ route('owner.products.category.delete', ['id' => Crypt::encrypt($category->id)]) }}">
+                                                    data-action="{{ route('owner.produk.kategori.delete', ['id' => Crypt::encrypt($category->id)]) }}">
                                                     <img src="{{ URL::asset('assets/img/icons/delete.svg') }}"
                                                         alt="img" />
                                                 </a>
@@ -95,7 +83,6 @@
             </div>
         </div>
     </div>
-
 @endsection
 <?php
 $title = e($__env->yieldContent('title'));
@@ -109,20 +96,15 @@ $msg = Session::get($type);
     <script src="{{ URL::asset('/assets/plugins/toastr/toastr.min.js') }}"></script>
     <script src="{{ URL::asset('/assets/plugins/toastr/toastr.js') }}"></script>
 
-    <script>
-        let type = {!! json_encode($type) !!};
-        let msg = {!! json_encode($msg) !!};
-        const title = {!! json_encode($title) !!};
-        @if (Session::has($type))
-            {
-                toastr[type](msg, title, {
-                    closeButton: !0,
-                    tapToDismiss: !1,
-                    positionClass: 'toast-top-center',
-                })
-            }
-        @endif
-    </script>
+    @if ($type != null)
+        <script>
+            let type = {!! json_encode($type) !!};
+            let msg = {!! json_encode($msg) !!};
+            const title = {!! json_encode($title) !!};
+            toastr[type](msg, title)
+        </script>
+    @endif
+
     <script>
         $(document).on('click', '#confirm-delete', function(event) {
             event.preventDefault();
@@ -143,7 +125,7 @@ $msg = Session::get($type);
                         headers: {
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                         },
-                        type: 'GET',
+                        type: 'DELETE',
                         success: function(data) {
                             Swal.fire({
                                 title: 'Deleted!',
@@ -166,5 +148,14 @@ $msg = Session::get($type);
                 }
             });
         });
+
+        $(document).on('click', '#reportPdf', function() {
+            const url = `{{ route('owner.produk.kategori.reportPdf') }}`
+            window.open(url, '_blank')
+        })
+        $(document).on('click', '#reportExcel', function() {
+            const url = `{{ route('owner.produk.kategori.reportExcel') }}`
+            window.open(url, '_blank')
+        })
     </script>
 @endsection

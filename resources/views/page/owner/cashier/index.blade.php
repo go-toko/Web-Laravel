@@ -38,56 +38,63 @@
                                 <thead>
                                     <tr>
                                         <th class="col-0">Foto</th>
-                                        <th class="col-3">Nama Lengkap</th>
-                                        <th class="col-2">Jenis Kelamin</th>
-                                        <th class="col-1">Tanggal Lahir</th>
-                                        <th class="col-1">Status</th>
+                                        <th class="col-2">Nama</th>
+                                        <th class="col-1">Jenis Kelamin</th>
+                                        <th class="col-2">Tanggal Lahir</th>
+                                        <th class="col-2">Toko</th>
                                         <th class="col-4">Alamat</th>
                                         <th class="col-1">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
+
                                     @foreach ($cashiers as $cashier)
                                         <tr>
                                             <td>
                                                 <div class="avatar">
                                                     <img class="avatar-img rounded-circle" alt="User Image"
-                                                        src="{{ isset($cashier->picture) && $cashier->picture != 'default-profile.png' ? asset('images/cashier-profile/' . $cashier->picture) : asset('images/default-profile.png') }}">
+                                                        src="{{ isset($cashier->user->userProfile->picture) && $cashier->user->userProfile->picture != 'default-profile.png' ? asset('images/cashier-profile/' . $cashier->user->userProfile->picture) : asset('images/default-profile.png') }}">
                                                 </div>
                                             </td>
-                                            <td>{{ $cashier->name }}</td>
+                                            <td>{{ $cashier->user->userProfile->first_name . ' ' . $cashier->user->userProfile->last_name }}
+                                            </td>
                                             <td>
-                                                @if ($cashier->gender == 'male')
+                                                @if ($cashier->user->userProfile->gender == 'male')
                                                     Laki-laki
-                                                @else
+                                                @elseif ($cashier->user->userProfile->gender == 'female')
                                                     Perempuan
                                                 @endif
                                             </td>
-                                            <td>{{ Carbon\Carbon::createFromFormat('Y-m-d', $cashier->birthDate)->format('d-m-Y') }}
+                                            <td>{{ $cashier->user->userProfile->birthdate ? Carbon\Carbon::createFromFormat('Y-m-d', $cashier->user->userProfile->birthdate)->translatedFormat('d F Y') : 'Belum di isi' }}
                                             </td>
                                             <td>
-                                                <select class="form-control select cashierStatus"
+                                                <select class="form-control select cashierShop"
                                                     data-url="{{ route('owner.orang.kasir.update', ['id' => Crypt::encrypt($cashier->id)]) }}">
-                                                    @foreach ($status as $index => $value)
-                                                        <option value="{{ $index }}"
-                                                            @if ($cashier->status == $index) selected @endif>
-                                                            {{ $value }}
-                                                        </option>
+                                                    @foreach ($shops as $shop)
+                                                        <option value="{{ $shop->id }}"
+                                                            @if ($shop->id == $cashier->shop_id) selected @endif>
+                                                            {{ $shop->name }}</option>
                                                     @endforeach
                                                 </select>
                                             </td>
-                                            <td>{{ $cashier->address }}</td>
-                                            <td>
-                                                <a class="me-1 detail-cashier" data-bs-toggle="modal"
-                                                    data-bs-target="#exampleModal"
-                                                    data-url="{{ route('owner.orang.kasir.getCashierByUsername', ['username' => $cashier->username]) }}">
-                                                    <img src="{{ URL::asset('assets/img/icons/eye.svg') }}" alt="eye">
+                                            <td>{{ $cashier->user->userProfile->address ?? 'Belum di isi' }}</td>
+                                            <td class="form-group d-flex align-center m-0">
+                                                <a class="me-1 btn btn-filters detail-cashier" data-bs-toggle="modal"
+                                                    title="Detail" data-bs-target="#exampleModal"
+                                                    data-url="{{ route('owner.orang.kasir.getCashierByEmail', ['email' => $cashier->user->email]) }}">
+                                                    <i class="fa fa-eye"></i>
                                                 </a>
-                                                <a class="me-1" id="confirm-delete"
-                                                    data-action="{{ route('owner.orang.kasir.delete', ['id' => Crypt::encrypt($cashier->id)]) }}">
-                                                    <img src="{{ URL::asset('assets/img/icons/delete.svg') }}"
-                                                        alt="img" />
-                                                </a>
+                                                @if ($cashier->isActive)
+                                                    <a class="me-1 btn btn-filters" id="confirm-delete" title="Nonaktifkan"
+                                                        data-action="{{ route('owner.orang.kasir.delete', ['id' => Crypt::encrypt($cashier->id)]) }}">
+                                                        <i class="fa fa-trash"></i>
+                                                    </a>
+                                                @else
+                                                    <a class="me-1 btn btn-filters" id="restore-cashier" title="Aktifkan"
+                                                        data-action="{{ route('owner.orang.kasir.restore', ['id' => Crypt::encrypt($cashier->id)]) }}">
+                                                        <i class="fa fa-undo"></i>
+                                                    </a>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach
@@ -115,8 +122,14 @@
                                 src="{{ URL::asset('images/default-profile.png') }}" alt="">
                         </div>
                         <div class="col-8 col-xl-7">
-                            <h3 id="cashier-name">Arif Rahman Mubarok</h3>
-                            <h4 id="cashier-username">arifrm28</h4>
+                            <h3 id="cashier-name">Nama Lengkap</h3>
+                            <h4 id="cashier-username">nama-pengguna</h4>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-4 col-sm-4 col-md-4 offset-xl-1 col-xl-3"><strong>Email</strong></div>
+                        <div class="col-8 col-sm-8 col-md-8 col-xl-7">
+                            <p id="cashier-email">example@gmail.com</p>
                         </div>
                     </div>
                     <div class="row">
@@ -126,15 +139,28 @@
                         </div>
                     </div>
                     <div class="row">
+                        <div class="col-4 col-sm-4 col-md-4 offset-xl-1 col-xl-3"><strong>Telepon</strong></div>
+                        <div class="col-8 col-sm-8 col-md-8 col-xl-7">
+                            <p id="cashier-phone">0892137834132</p>
+                        </div>
+                    </div>
+                    <div class="row">
                         <div class="col-4 col-sm-4 col-md-4 offset-xl-1 col-xl-3"><strong>Tanggal Lahir</strong></div>
                         <div class="col-8 col-sm-8 col-md-8 col-xl-7">
                             <p id="cashier-birthDate">20 Maret 2002</p>
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-4 col-sm-4 col-md-4 offset-xl-1 col-xl-3"><strong>Status</strong></div>
+                        <div class="col-4 col-sm-4 col-md-4 offset-xl-1 col-xl-3"><strong>Toko</strong></div>
                         <div class="col-8 col-sm-8 col-md-8 col-xl-7">
-                            <div class="badge bg-success" id="cashier-status">Aktif</div>
+                            <p id="cashier-shop">Nama Toko</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-4 col-sm-4 col-md-4 offset-xl-1 col-xl-3"><strong>Tanggal dibuat akun</strong>
+                        </div>
+                        <div class="col-8 col-sm-8 col-md-8 col-xl-7">
+                            <p id="cashier-created">1 Januari 2001</p>
                         </div>
                     </div>
                     <div class="row">
@@ -143,13 +169,6 @@
                             <p id="cashier-address">Detail Lengkap Alamat Lorem ipsum, dolor sit amet consectetur
                                 adipisicing elit. Recusandae
                                 fuga vel esse, incidunt molestiae vitae.</p>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-4 col-sm-4 col-md-4 offset-xl-1 col-xl-3"><strong>Akun dibuat pada tanggal</strong>
-                        </div>
-                        <div class="col-8 col-sm-8 col-md-8 col-xl-7">
-                            <p id="cashier-created">20 Bulan Tahun</p>
                         </div>
                     </div>
                 </div>
@@ -166,7 +185,6 @@
 $title = e($__env->yieldContent('title'));
 $type = Session::get('type');
 $msg = Session::get($type);
-// dd($type);
 ?>
 
 @section('forscript')
@@ -188,13 +206,14 @@ $msg = Session::get($type);
             const url = $(this).data('action');
 
             Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
+                title: 'Apakah kamu yakin?',
+                text: "Anda akan menonaktifkan kasir ini",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc3545',
                 cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, delete it!'
+                confirmButtonText: 'Ya, Nonaktifkan!',
+                cancelButtonText: 'Batalkan'
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
@@ -205,7 +224,50 @@ $msg = Session::get($type);
                         type: 'DELETE',
                         success: function(data) {
                             Swal.fire({
-                                title: 'Deleted!',
+                                title: 'Berhasil!',
+                                text: data.msg,
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                            location.reload();
+                        },
+                        error: function(data) {
+                            Swal.fire({
+                                title: 'Oops...',
+                                text: data.msg,
+                                icon: 'error',
+                                confirmButtonColor: '#dc3545'
+                            })
+                        }
+                    });
+                }
+            });
+        });
+        $(document).on('click', '#restore-cashier', function(event) {
+            event.preventDefault();
+            const url = $(this).data('action');
+
+            Swal.fire({
+                title: 'Apakah kamu yakin?',
+                text: "Anda akan mengaktifkan kembali kasir ini",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#2de000',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, Aktifkan!',
+                cancelButtonText: 'Batalkan'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url,
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        type: 'PUT',
+                        success: function(data) {
+                            Swal.fire({
+                                title: 'Berhasil!',
                                 text: data.msg,
                                 icon: 'success',
                                 timer: 1500,
@@ -228,13 +290,15 @@ $msg = Session::get($type);
     </script>
     <script>
         // select the DOM 
-        const titleDOM = $('#exampleModalLabel')
         const cashierPhotoProfil = $('#cashier-photo-profile');
+        const titleDOM = $('#exampleModalLabel')
         const cashierName = $('#cashier-name');
         const cashierUsername = $('#cashier-username');
+        const cashierEmail = $('#cashier-email');
         const cashierGender = $('#cashier-gender');
+        const cashierPhone = $('#cashier-phone');
         const cashierBirthDate = $('#cashier-birthDate');
-        const cashierStatus = $('#cashier-status');
+        const cashierShop = $('#cashier-shop');
         const cashierCreated = $('#cashier-created');
         const cashierAddress = $('#cashier-address');
 
@@ -243,34 +307,33 @@ $msg = Session::get($type);
             titleDOM.text('')
             cashierName.text('')
             cashierUsername.text('')
+            cashierEmail.text('')
             cashierGender.text('')
+            cashierPhone.text('')
             cashierBirthDate.text('')
-            cashierStatus.text('')
+            cashierShop.text('')
             cashierCreated.text('')
+            cashierAddress.text('')
         }
 
-        function showDetail(data) {
+        function showDetail(user) {
             resetDetail();
+            const birthDate = user.user_profile.birthdate ? new Date(user.user_profile.birthdate) : undefined;
+            const createdAt = new Date(user.created_at);
 
-            titleDOM.text(`Profil ${data.name}`)
-            if (data.picture && data.picture != 'default-profile.png')
-                cashierPhotoProfil.attr('src', `{{ URL::asset('images/cashier-profile/${data.picture}') }}`)
-            cashierName.text(data.name);
-            cashierUsername.text(data.username)
-            cashierGender.text(`${data.gender === 'male' ? 'Laki-laki' : 'Perempuan'}`)
-            cashierAddress.text(`${data.address ? data.address : 'Belum di isi'}`)
-
-            const status = ['Aktif', 'Resign', 'Keluar']
-            const statusClass = ['bg-success', 'bg-warning text-dark', 'bg-danger']
-            cashierStatus.text(status[data.status]);
-            cashierStatus.removeClass('bg-success bg-warning bg-danger');
-            cashierStatus.addClass(statusClass[data.status])
-
-            const birthDate = new Date(data.birthDate);
+            titleDOM.text(`Profil ${user.user_profile.first_name} ${user.user_profile.last_name}`);
+            cashierName.text(`${user.user_profile.first_name} ${user.user_profile.last_name}`);
+            cashierUsername.text(user.user_profile.nickname)
+            cashierEmail.text(`${user.email}`)
+            cashierGender.text(`${user.user_profile.gender === 'male' ? 'Laki-laki' : 'Perempuan'}`)
+            cashierPhone.text(`${user.user_profile.phone}`)
             cashierBirthDate.text(
-                `${birthDate.toLocaleString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}`)
-            const createdAt = new Date(data.created_at);
+                `${birthDate ? birthDate.toLocaleString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}) : 'Belum di isi'}`
+            );
+            cashierShop.text(`${user.user_cashier.shop.name}`);
+
             cashierCreated.text(`${createdAt.toLocaleString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}`)
+            cashierAddress.text(`${user.user_profile.address ? user.user_profile.address : 'Belum di isi'}`)
         }
 
         $(document).on('click', '.detail-cashier', function(e) {
@@ -289,24 +352,24 @@ $msg = Session::get($type);
     </script>
 
     <script>
-        $(document).on('change', '.cashierStatus', function(event) {
+        $(document).on('change', '.cashierShop', function(event) {
             event.preventDefault();
             const url = $(this).data('url');
-            const status = $(this).val();
+            const shopId = $(this).val();
             $.ajax({
                 url,
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 data: {
-                    status
+                    shop_id: shopId
                 },
                 type: 'PUT',
                 success: function(data) {
                     toastr.success(data.msg, data.title)
                 },
                 error: function(error) {
-                    toastr.error(data.msg, data.title)
+                    toastr.error(error.msg, error.title)
                 }
             })
         })

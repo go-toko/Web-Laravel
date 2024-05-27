@@ -12,7 +12,7 @@
         @foreach ($categories as $item)
             <tr>
                 <td>{{ $loop->iteration }}</td>
-                <td>{{ Str::headline($item->name) }}</td>
+                <td>{{ $item->name }}</td>
                 <td>{{ $item->code }}</td>
                 <td>{{ $item->description }}</td>
                 <td>{{ $item->created_at->format('d-m-Y') }}</td>

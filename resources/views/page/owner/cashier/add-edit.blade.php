@@ -38,14 +38,26 @@
                                     {{ method_field('put') }}
                                 @endif
                                 <div class="row">
-                                    <div class="col-lg-3 col-sm-6 col-12">
+                                    <div class="col-lg-6 col-sm-6 col-12">
                                         <div class="form-group">
-                                            <label>Nama Lengkap</label>
-                                            <input id="name" name="name" type="text"
+                                            <label>Nama Depan</label>
+                                            <input id="first_name" name="first_name" type="text"
                                                 @if (isset($data)) readonly @endif
-                                                class="form-control @error('name') is-invalid @enderror"
-                                                value="{{ Str::headline(old('name') ?? ($data->name ?? null)) }}" autofocus>
-                                            @error('name')
+                                                class="form-control @error('first_name') is-invalid @enderror"
+                                                value="{{ old('first_name') ?? ($data->first_name ?? null) }}" autofocus>
+                                            @error('first_name')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6 col-sm-6 col-12">
+                                        <div class="form-group">
+                                            <label>Nama Belakang</label>
+                                            <input id="last_name" name="last_name" type="text"
+                                                @if (isset($data)) readonly @endif
+                                                class="form-control @error('last_name') is-invalid @enderror"
+                                                value="{{ old('last_name') ?? ($data->last_name ?? null) }}">
+                                            @error('last_name')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
@@ -63,6 +75,17 @@
                                                     {{ Str::ucfirst('perempuan') }}</option>
                                             </select>
                                             @error('gender')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-sm-6 col-12">
+                                        <div class="form-group">
+                                            <label>Telepon</label>
+                                            <input id="phone" name="phone" type="text"
+                                                class="form-control @error('phone') is-invalid @enderror"
+                                                value="{{ old('phone') ?? ($data->phone ?? null) }}">
+                                            @error('phone')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
@@ -88,12 +111,15 @@
                                     </div>
                                     <div class="col-lg-3 col-sm-6 col-12">
                                         <div class="form-group">
-                                            <label>Alamat <span class="text-muted">(tidak wajib)</span></label>
-                                            <input id="address" name="address" type="text"
-                                                @if (isset($data)) readonly @endif
-                                                class="form-control @error('address') is-invalid @enderror"
-                                                value="{{ Str::headline(old('address') ?? ($data->address ?? null)) }}">
-                                            @error('address')
+                                            <label>Pilih Toko</label>
+                                            <select name="shop" id="shop" class="select form-small">
+                                                @foreach ($shops as $shop)
+                                                    <option value="{{ $shop->id }}"
+                                                        {{ isset($data) && $data->shop_id == $shop->id ? 'selected' : '' }}>
+                                                        {{ $shop->name }}</option>
+                                                @endforeach
+                                            </select>
+                                            @error('shop')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
@@ -113,36 +139,15 @@
                                     <div class="col-lg-3 col-sm-6 col-12">
                                         <div class="form-group">
                                             <label>Nama Pengguna</label>
-                                            <input id="username" name="username" type="text"
+                                            <input id="nickname" name="nickname" type="text"
                                                 @if (isset($data)) readonly @endif
-                                                class="form-control @error('username') is-invalid @enderror"
-                                                value="{{ old('username') ?? ($data->username ?? null) }}">
-                                            @error('username')
+                                                class="form-control @error('nickname') is-invalid @enderror"
+                                                value="{{ old('nickname') ?? ($data->nickname ?? null) }}">
+                                            @error('nickname')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
-                                            <div class="form-text">*) Nama pengguna harus tanpa spasi
-                                            </div>
                                         </div>
                                     </div>
-                                    @if (isset($data))
-                                        <div class="col-lg-3 col-sm-6 col-12">
-                                            <div class="form-group">
-                                                <label>Status</label>
-                                                <select name="status" id="status" class="select form-small">
-                                                    <option value="0"
-                                                        @if (old('status') == '0' || (isset($data) && $data->status == '0')) selected disabled @endif>
-                                                        {{ Str::ucfirst('Aktif') }}
-                                                    </option>
-                                                    <option value="1"
-                                                        @if (old('status') == '1' || (isset($data) && $data->status == '1')) selected disabled @endif>
-                                                        {{ Str::ucfirst('Resign') }}</option>
-                                                    <option value="2"
-                                                        @if (old('status') == '2' || (isset($data) && $data->status == '2')) selected disabled @endif>
-                                                        {{ Str::ucfirst('Keluar') }}</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    @endif
                                     @if (!isset($data))
                                         <div class="col-lg-3 col-sm-6 col-12">
                                             <div class="form-group">
@@ -152,7 +157,7 @@
                                                         class="form-control pass-input @error('password') is-invalid @enderror">
                                                     <span class="fas toggle-password fa-eye-slash"></span>
                                                     @error('password')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                        <span class="invalid-feedback">{{ $message }}</span>
                                                     @enderror
                                                 </div>
                                             </div>
@@ -166,29 +171,18 @@
                                                         class="form-control pass-input @error('password_confirmation') is-invalid @enderror">
                                                     <span class="fas toggle-password fa-eye-slash"></span>
                                                     @error('password_confirmation')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-12">
-                                            <div class="form-group">
-                                                <label>Foto Profil <span class="text-muted">(tidak wajib)</span></label>
-                                                <div class="image-upload">
-                                                    <input id="imageUpload" name="picture" type="file"
-                                                        class="form-control @error('picture') is-invalid @enderror">
-                                                    <div class="image-uploads">
-                                                        <img src="{{ URL::asset('assets/img/icons/upload.svg') }}"
-                                                            alt="img">
-                                                        <h4 id="imgNameUpload">Seret dan jatuhkan file untuk diunggah</h4>
-                                                    </div>
-                                                    @error('picture')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                        <span class="invalid-feedback">{{ $message }}</span>
                                                     @enderror
                                                 </div>
                                             </div>
                                         </div>
                                     @endif
+                                    <div class="col-lg-12 col-sm-12 col-12">
+                                        <div class="form-group">
+                                            <label>Alamat <span class="text-muted">(tidak wajib)</span></label>
+                                            <textarea name="address" class="form-control" id="address" cols="30" rows="10">{{ old('address') ?? ($data->address ?? null) }}</textarea>
+                                        </div>
+                                    </div>
                                     <div class="col-lg-12">
                                         <button type="submit" class="btn btn-submit me-2">Kirim</button>
                                         <a href="{{ route('owner.orang.kasir.index') }}" class="btn btn-cancel">Batal</a>
@@ -203,6 +197,13 @@
     </div>
 
 @endsection
+
+<?php
+$title = e($__env->yieldContent('title'));
+$type = Session::get('type');
+$msg = Session::get($type);
+?>
+
 @section('forscript')
     <script type="text/javascript">
         const input = document.getElementById('imageUpload');
@@ -212,6 +213,16 @@
             name.textContent = file.name;
         });
     </script>
+    <script src="{{ URL::asset('/assets/plugins/toastr/toastr.min.js') }}"></script>
+    <script src="{{ URL::asset('/assets/plugins/toastr/toastr.js') }}"></script>
+    @if ($type != null)
+        <script>
+            let type = {!! json_encode($type) !!};
+            let msg = {!! json_encode($msg) !!};
+            const title = {!! json_encode($title) !!};
+            toastr[type](msg, title)
+        </script>
+    @endif
     <script>
         $(window).ready(function() {
             $('.select').select2();

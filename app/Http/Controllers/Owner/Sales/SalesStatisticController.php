@@ -5,11 +5,9 @@ namespace App\Http\Controllers\Owner\Sales;
 use App\Http\Controllers\Controller;
 use App\Models\SalesModel;
 use App\Models\ShopModel;
-use App\Models\UserCashierModel;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 
 class SalesStatisticController extends Controller
 {
@@ -28,48 +26,32 @@ class SalesStatisticController extends Controller
         ]);
     }
 
-    public function getCashierOnShop(Request $request)
-    {
-        return response()->json(['cashier' => UserCashierModel::where(['shop_id' => $request->shop_id, 'isActive' => true])->get()]);
-    }
-
     public function getSales(Request $request)
     {
-
         $shop_id = $request->query('shop_id') ?? ShopModel::where('user_id', Auth::user()->id)->latest()->first()->id;
         $year = $request->query('year') ?? Carbon::now()->year;
+        $sales = SalesModel::where(['shop_id' => $shop_id])->whereYear('created_at', $year);
+
         if ($request->query('month')) {
             $month = $request->query('month');
             $month =  strlen((string)$month) == 1 ? "0$month" : (string)$month;
+            $sales = $sales->whereMonth('created_at', $month);
         }
 
-        $cashiers = $request->query('cashier') && $request->query('cashier') != 'all' ?
-            UserCashierModel::where(['id' => $request->query('cashier'), 'isActive' => true])->get() :
-            UserCashierModel::where(['shop_id' => $shop_id,  'isActive' => true])->get();
-
-        $sales = $request->query('month') ?
-            SalesModel::where(['shop_id' => $shop_id, 'isActive' => true])->where('date', 'LIKE', "$year-$month%")->get() :
-            SalesModel::where(['shop_id' => $shop_id, 'isActive' => true])->where('date', 'LIKE', "$year%")->get();
         $data = [];
         $amounts = !$request->query('month') ? [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         $data["total"] = [
             'name' => 'Total Penjualan',
             'data' => $amounts
         ];
-        foreach ($cashiers as $cashier) {
-            $data["cashier$cashier->id"] = [
-                'name' => Str::title($cashier->name),
-                'data' => $amounts
-            ];
-        }
-        foreach ($sales as $sale) {
+
+        foreach ($sales->get() as $sale) {
+            $date = Carbon::create($sale->created_at);
             $index = $request->query('month') ?
-                explode('-', $sale->date)[2] - 1 :
-                explode('-', $sale->date)[1] - 1;
-            $data["total"]["data"][$index] += $sale->total;
-            foreach ($cashiers as $cashier) {
-                $sale->cashier_id == $cashier->user_id ? $data["cashier$cashier->id"]["data"][$index] += $sale->total : null;
-            }
+                $date->day - 1 :
+                $date->month - 1;
+
+            $data["total"]["data"][$index] += $sale->total_bill;
         }
         return response()->json(['sales' => $data]);
     }

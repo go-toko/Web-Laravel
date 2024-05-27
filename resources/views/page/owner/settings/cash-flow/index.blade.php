@@ -29,16 +29,6 @@
                 <div class="col-sm-12">
                     <section class="comp-section">
                         <div class="row">
-                            <div class="col-12 d-flex justify-content-end">
-                                <div class="form-group d-flex align-items-center gap-3">
-                                    <a data-bs-toggle="tooltip" data-bs-placement="top" title="PDF" id="reportPdf"><img
-                                            src="{{ URL::asset('assets/img/icons/pdf.svg') }}" alt="img"></a>
-                                    <a data-bs-toggle="tooltip" data-bs-placement="top" title="Excel" id="reportExcel"><img
-                                            src="{{ URL::asset('assets/img/icons/excel.svg') }}" alt="img"></a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
                             <div class="col-6 col-lg-2">
                                 <div class="form-group">
                                     <label>Toko</label>
@@ -81,7 +71,20 @@
                                     <select name="month" id="month"
                                         class="select @error('month') is-invalid @enderror">
                                         @php
-                                            $months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                                            $months = [
+                                                'January',
+                                                'February',
+                                                'March',
+                                                'April',
+                                                'May',
+                                                'June',
+                                                'July',
+                                                'August',
+                                                'September',
+                                                'October',
+                                                'November',
+                                                'December',
+                                            ];
                                         @endphp
                                         @foreach ($months as $index => $month)
                                             <option value="{{ $index + 1 }}">{{ $month }}</option>
@@ -97,7 +100,6 @@
             </div>
         </div>
     </div>
-
 @endsection
 <?php
 $title = e($__env->yieldContent('title'));

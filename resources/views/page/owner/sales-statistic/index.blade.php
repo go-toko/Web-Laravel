@@ -71,19 +71,24 @@
                                     <select name="month" id="month"
                                         class="select @error('month') is-invalid @enderror">
                                         @php
-                                            $months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                                            $months = [
+                                                'Januari',
+                                                'Februari',
+                                                'Maret',
+                                                'April',
+                                                'Mei',
+                                                'Juni',
+                                                'Juli',
+                                                'Agustus',
+                                                'September',
+                                                'Oktober',
+                                                'November',
+                                                'Desember',
+                                            ];
                                         @endphp
                                         @foreach ($months as $index => $month)
                                             <option value="{{ $index + 1 }}">{{ $month }}</option>
                                         @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-6 col-lg-2" id="cashierField">
-                                <div class="form-group">
-                                    <label>Kasir dalam Toko</label>
-                                    <select name="cashier" id="cashier"
-                                        class="select @error('cashier') is-invalid @enderror">
                                     </select>
                                 </div>
                             </div>
@@ -215,7 +220,7 @@ $msg = Session::get($type);
         async function showDataYear() {
             let dataSales;
             let url =
-                `{{ route('owner.penjualan.statistik-penjualan.penjualan') }}?shop_id=${$('#shop_id').val()}&year=${$('#year').val()}&cashier=${$('#cashier').val()}`;
+                `{{ route('owner.penjualan.statistik-penjualan.penjualan') }}?shop_id=${$('#shop_id').val()}&year=${$('#year').val()}`;
             await $.ajax({
                 url,
                 headers: {
@@ -242,7 +247,7 @@ $msg = Session::get($type);
         async function showDataMonth() {
             let dataSales;
             const url =
-                `{{ route('owner.penjualan.statistik-penjualan.penjualan') }}?shop_id=${$('#shop_id').val()}&year=${$('#year').val()}&month=${$('#month').val()}&cashier=${$('#cashier').val()}`
+                `{{ route('owner.penjualan.statistik-penjualan.penjualan') }}?shop_id=${$('#shop_id').val()}&year=${$('#year').val()}&month=${$('#month').val()}`
             await $.ajax({
                 url,
                 headers: {
@@ -263,37 +268,11 @@ $msg = Session::get($type);
         }
 
 
-        async function renderDataCashier() {
-            const shopId = $('#shop_id').val();
-            const url = `{{ route('owner.penjualan.statistik-penjualan.cashier') }}?shop_id=${shopId}`;
-            await $.ajax({
-                url,
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                type: 'POST',
-                success: function(data) {
-                    $('#cashier').empty();
-                    data.cashier.length === 0 ? $('#cashier').append(
-                        `<option value="null" selected disabled>Belum ada Kasir</option>`) : $(
-                        '#cashier').append(
-                        `<option value="all">Semua</option>`);
-                    data?.cashier?.forEach(value => {
-                        $('#cashier').append(
-                            `<option value="${value.id}">${value.name.split(' ').map(name => name.charAt(0).toUpperCase() + name.slice(1)).join(' ')}</option>`
-                        )
-                    })
-                }
-            })
-        }
-
         $(document).ready(async function() {
-            showDataYear();
-            renderDataCashier();
+            await showDataYear();
         })
 
         $(document).on('change', '#shop_id', async function() {
-            await renderDataCashier();
             await showDataYear();
             showField('yearField');
             hideField('monthField');

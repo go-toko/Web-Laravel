@@ -85,13 +85,13 @@
                                                         <option disabled selected>Pilih...</option>
                                                         @foreach ($products as $item)
                                                             <option value="{{ $item->id }}">
-                                                                {{ Str::headline($item->name) }} - {{ $item->unit }}
+                                                                {{ $item->name }} - {{ $item->unit }}
                                                             </option>
                                                         @endforeach
                                                     </select>
                                                 </div>
                                             </div>
-                                            <div class="col-lg-3 col-sm-6 col-12">
+                                            <div class="col-lg-2 col-sm-6 col-12">
                                                 <div class="form-group">
                                                     <label>Banyaknya</label>
                                                     <input id="quantity[0]" name="quantity[0]" type="number"
@@ -104,7 +104,7 @@
                                                     @enderror
                                                 </div>
                                             </div>
-                                            <div class="col-lg-3 col-sm-6 col-12">
+                                            <div class="col-lg-2 col-sm-6 col-12">
                                                 <div class="form-group">
                                                     <label>Harga Beli</label>
                                                     <input id="price_buy[0]" name="price_buy[0]" type="text"
@@ -113,6 +113,19 @@
                                             @enderror"
                                                         value="{{ old('price_buy[0]') ?? ($data->price_buy ?? null) }}">
                                                     @error('price_buy[0]')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-2 col-sm-6 col-12">
+                                                <div class="form-group">
+                                                    <label>Harga Jual Terbaru</label>
+                                                    <input id="price_sell[0]" name="price_sell[0]" type="text"
+                                                        class="form-control formatRupiah @error('price_sell[0]')
+                                                is-invalid
+                                            @enderror"
+                                                        value="{{ old('price_sell[0]') ?? ($data->price_sell ?? null) }}">
+                                                    @error('price_sell[0]')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
@@ -205,12 +218,12 @@ $msg = Session::get($type);
                                                         <option value="" disabled selected>Pilih...</option>
                                                         @foreach ($products as $item)
                                                             <option value="{{ $item->id }}">
-                                                                {{ Str::headline($item->name) }} - {{ $item->unit }}</option>
+                                                                {{ $item->name }} - {{ $item->unit }}</option>
                                                         @endforeach
                                                     </select>
                                                 </div>
                                             </div>
-                                            <div class="col-lg-3 col-sm-6 col-12">
+                                            <div class="col-lg-2 col-sm-6 col-12">
                                                 <div class="form-group">
                                                     <label>Banyaknya</label>
                                                     <input id="quantity[${index}]" name="quantity[${index}]" type="number"
@@ -223,7 +236,7 @@ $msg = Session::get($type);
                                                     @enderror
                                                 </div>
                                             </div>
-                                            <div class="col-lg-3 col-sm-6 col-12">
+                                            <div class="col-lg-2 col-sm-6 col-12">
                                                 <div class="form-group">
                                                     <label>Harga Beli</label>
                                                     <input id="price_buy[${index}]" name="price_buy[${index}]" type="text"
@@ -232,6 +245,19 @@ $msg = Session::get($type);
                                             @enderror"
                                                         value="{{ old('price_buy[${index}]') ?? ($data->price_buy ?? null) }}">
                                                     @error('price_buy[${index}]')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-2 col-sm-6 col-12">
+                                                <div class="form-group">
+                                                    <label>Harga Jual Terbaru</label>
+                                                    <input id="price_sell[${index}]" name="price_sell[${index}]" type="text"
+                                                        class="form-control formatRupiah @error('price_sell[${index}]')
+                                                is-invalid
+                                            @enderror"
+                                                        value="{{ old('price_sell[${index}]') ?? ($data->price_sell ?? null) }}">
+                                                    @error('price_sell[${index}]')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>

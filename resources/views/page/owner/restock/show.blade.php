@@ -1,7 +1,7 @@
 <?php $page = 'menus'; ?>
 @extends('layout.mainlayout')
 
-@section('title', 'Detail Penjualan')
+@section('title', 'Detail Restock')
 
 @section('forhead')
     {{-- Toastr Style --}}
@@ -23,7 +23,7 @@
                     <h6>
                         <ul class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{ url('owner/dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="{{ url('owner/penjualan/penjualan') }}">Penjualan</a>
+                            <li class="breadcrumb-item"><a href="{{ url('owner/produk/restock') }}">Restock Produk</a>
                             </li>
                             <li class="breadcrumb-item active"> @yield('title') </li>
                         </ul>
@@ -50,7 +50,7 @@
                                     </div>
                                     <div class="col-lg-4 col-md-4 col-sm-4 col-12">
                                         <h6 style="color: #7367F0" class="my-1">Informasi Toko</h6>
-                                        <p>{{ Str::headline($restock->shop->name) }}</p>
+                                        <p>{{ $restock->shop->name }}</p>
                                         <p>{{ $restock->shop->user->email }}</p>
                                         <p>{{ $restock->shop->user->userProfile->phone }}</p>
                                         <p>{{ Str::title($restock->shop?->address ? $restock->shop->address . ', ' . $restock->shop->village . ', ' . $restock->shop->district . ', ' . $restock->shop->regency . ', ' . $restock->shop->province : $restock->shop->village . ', ' . $restock->shop->district . ', ' . $restock->shop->regency . ', ' . $restock->shop->province) }}
@@ -73,7 +73,7 @@
                                             @foreach ($restock->detail as $detail)
                                                 <tr>
                                                     <td>
-                                                        {{ Str::headline($detail->product->name) }}
+                                                        {{ $detail->product->name }}
                                                     </td>
                                                     <td class="text-end">{{ $detail->quantity }}
                                                         {{ Str::lower($detail->product->unit) }}
@@ -101,74 +101,17 @@
                                         </div>
                                     </div>
                                     <div class="col-lg-12">
-                                        <a href="{{ route('owner.penjualan.penjualan.index') }}"
+                                        <a href="{{ route('owner.produk.restock.index') }}"
                                             class="btn btn-cancel">Kembali</a>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        {{-- <div class="table-responsive">
-                            <table class="table datanew">
-                                <thead>
-                                    <tr>
-                                        <th class="col-1">Tanggal</th>
-                                        <th class="col-2">Nama Pelanggan</th>
-                                        <th class="col-1">Total</th>
-                                        <th class="col-1">Jumlah Bayar</th>
-                                        <th class="col-1">Kembalian</th>
-                                        <th class="col-1">Metode Pembayaran</th>
-                                        <th class="col-1">Status Pembayaran</th>
-                                        <th class="col-2">Kasir</th>
-                                        <th class="col-1">Status</th>
-                                        <th class="col-1">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($sales as $sale)
-                                        <tr>
-                                            <td>{{ $sale->date }}</td>
-                                            <td>
-                                                {{ Str::headline($sale->customer_name) }}
-                                            </td>
-                                            <td class="formatRupiah">{{ $sale->total }}</td>
-                                            <td class="formatRupiah">{{ $sale->paid }}</td>
-                                            <td class="formatRupiah">{{ $sale->change }}</td>
-                                            <td>{{ $sale->payment_method }}</td>
-                                            <td><span
-                                                    class="badges {{ $sale->payment_status == 'lunas' ? 'bg-lightgreen' : 'bg-lightred' }}">{{ Str::headline($sale->payment_status) }}</span>
-                                            </td>
-                                            <td>{{ Str::title($sale->cashier->userCashierProfile->name) }}</td>
-                                            <td><span
-                                                    class="badges @if ($sale->status == 'selesai') bg-lightgreen @elseif($sale->status == 'tertunda') bg-lightyellow @elseif($sale->status == 'batal') bg-lightred @endif">{{ Str::headline($sale->status) }}</span>
-                                            </td>
-                                            <td>
-                                                <a class="me-1 detail-cashier" data-bs-toggle="modal"
-                                                    data-bs-target="#exampleModal"
-                                                    data-url="{{ route('owner.orang.kasir.getCashierByUsername', ['username' => $cashier->username]) }}">
-                                                    <img src="{{ URL::asset('assets/img/icons/eye.svg') }}" alt="eye">
-                                                </a>
-                                                <a class="me-3"
-                                                    href="{{ route('owner.penjualan.penjualan.edit', ['id' => Crypt::encrypt($sale->id)]) }}">
-                                                    <img src="{{ URL::asset('assets/img/icons/edit.svg') }}"
-                                                        alt="img" />
-                                                </a>
-                                                <a class="me-3" id="confirm-delete"
-                                                    data-action="{{ route('owner.penjualan.penjualan.delete', ['id' => Crypt::encrypt($sale->id)]) }}">
-                                                    <img src="{{ URL::asset('assets/img/icons/delete.svg') }}"
-                                                        alt="img" />
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div> --}}
                     </section>
                 </div>
             </div>
         </div>
     </div>
-
 @endsection
 <?php
 $title = e($__env->yieldContent('title'));

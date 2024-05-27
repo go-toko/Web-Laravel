@@ -68,9 +68,12 @@ class RestockController extends Controller
             $total += ((int)$price_buy * (int)$quantity);
         }
         $shop = ShopModel::where(['id' => Crypt::decrypt(Session::get('active'))])->first();
-        if ($shop->balance < $total) {
-            throw new CustomException('Saldo tidak cukup');
-        }
+
+        // Saldo
+        // if ($shop->balance < $total) {
+        //     throw new CustomException('Saldo tidak cukup', 400);
+        // }
+
         try {
             DB::beginTransaction();
             $restock = RestockModel::create([
@@ -81,6 +84,7 @@ class RestockController extends Controller
             ]);
             foreach ($request->product as $key => $value) {
                 $price_buy = $this->formatRupiahToNumber($request->price_buy[$key]);
+                $price_sell = $this->formatRupiahToNumber($request->price_sell[$key]);
                 $restock_detail = RestockDetailModel::create([
                     'restock_id' => $restock->id,
                     'product_id' => $value,
@@ -91,12 +95,16 @@ class RestockController extends Controller
                 $product = ProductsModel::where(['id' => $value])->first();
                 $product->update([
                     'price_buy' => (int)$price_buy,
-                    'quantity' => (int)$product->quantity + (int)$request->quantity[$key]
+                    'quantity' => (int)$product->quantity + (int)$request->quantity[$key],
+                    'price_sell' => (int)$price_sell,
                 ]);
             }
-            $shop->update([
-                'balance' => (int)$shop->balance - $total
-            ]);
+
+            // Saldo
+            // $shop->update([
+            //     'balance' => (int)$shop->balance - $total
+            // ]);
+
             DB::commit();
             return redirect(route('owner.produk.restock.index'))->with(['type' => 'success', 'success' => 'Berhasil menambah produk']);
         } catch (\Throwable $e) {
@@ -165,12 +173,20 @@ class RestockController extends Controller
             $total += ((int)$quantity * (int)$price_buy);
         }
         $shop = ShopModel::where(['id' => Crypt::decrypt(Session::get('active'))])->first();
-        if (((int)$shop->balance + (int)$restock->total - (int)$total) < 0) {
-            throw new CustomException('Saldo tidak cukup', 400);
-        }
+
+        // Saldo
+        // if (((int)$shop->balance + (int)$restock->total - (int)$total) < 0) {
+        //     throw new CustomException('Saldo tidak cukup', 400);
+        // }
+
         try {
+            // DONE: menyesuaikan quantity product dan produk yang akan diedit
             DB::beginTransaction();
             foreach ($restock->detail as $value) {
+                $updateProduct = ProductsModel::where(['id' => $value->product_id])->first();
+                $updateProduct->update([
+                    'quantity' => (int)$updateProduct->quantity - (int)$value->quantity
+                ]);
                 $value->delete();
             }
             $restock->update([
@@ -181,6 +197,7 @@ class RestockController extends Controller
             ]);
             foreach ($request->product as $key => $value) {
                 $price_buy = (int)$this->formatRupiahToNumber($request->price_buy[$key]);
+                $price_sell = (int)$this->formatRupiahToNumber($request->price_sell[$key]);
                 $quantity = (int)$request->quantity[$key];
                 RestockDetailModel::create([
                     'restock_id' => $restock->id,
@@ -189,8 +206,17 @@ class RestockController extends Controller
                     'quantity' => $quantity,
                     'total' => $price_buy * $quantity
                 ]);
+                $product = ProductsModel::where(['id' => $value])->first();
+                $product->update([
+                    'price_buy' => (int)$price_buy,
+                    'quantity' => (int)$product->quantity + (int)$request->quantity[$key],
+                    'price_sell' => (int)$price_sell,
+                ]);
             }
-            $shop->update(['balance' => $total]);
+
+            // Saldo
+            // $shop->update(['balance' => $total]);
+
             DB::commit();
             return redirect(route('owner.produk.restock.index'))->with(['type' => 'success', 'success' => 'Berhasil mengubah produk']);
         } catch (\Throwable $e) {
@@ -210,15 +236,22 @@ class RestockController extends Controller
      */
     public function destroy($id)
     {
+        // DONE: menghapus restock = mengurangi stock
         $id = Crypt::decrypt($id);
         $idShop = Crypt::decrypt(Session::get('active'));
         $shop = ShopModel::where(['id' => $idShop])->first();
-        $restock = RestockModel::where(['id' => $id])->first();
+        $restock = RestockModel::with('detail')->where(['id' => $id])->first();
         try {
             DB::beginTransaction();
-            $shop->update([
-                'balance' => $shop->balance + $restock->total
-            ]);
+            foreach ($restock->detail as $detail) {
+                $product = ProductsModel::where(['id' => $detail->product_id])->first();
+                $product->update([
+                    'quantity' => (int)$product->quantity - (int)$detail->quantity
+                ]);
+            }
+            // $shop->update([
+            //     'balance' => $shop->balance + $restock->total
+            // ]);
             $restock->delete();
             DB::commit();
             return response()->json(['msg' => 'Berhasil menghapus restock']);

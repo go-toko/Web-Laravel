@@ -36,7 +36,6 @@
                     <section class="comp-section">
                         <div class="card">
                             <div class="card-body">
-                                {{-- <form action="{{ route('owner.pengeluaran.pengeluaran.index') }}" method="get"> --}}
                                 <div class="row">
                                     <div class="col-12 col-lg-3 col-md-3">
                                         <div class="form-group" id="startDateField">
@@ -89,8 +88,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                {{-- </form> --}}
-
                                 <div class="table-responsive">
                                     <table class="table datanew">
                                         <thead>
@@ -107,13 +104,14 @@
                                             @foreach ($expenses as $expense)
                                                 <tr>
                                                     <td>
-                                                        {{ Str::headline($expense->name) }}
+                                                        {{ $expense->name }}
                                                     </td>
                                                     <td>{{ $expense->description }}</td>
                                                     <td>{{ Str::title($expense->category->name) }}</td>
                                                     {{-- DONE: Implement amount format for Rupiah --}}
                                                     <td>{{ 'Rp' . number_format($expense->amount) }}</td>
-                                                    <td>{{ $expense->date }}</td>
+                                                    <td>{{ Carbon\Carbon::create($expense->date)->translatedFormat('d F Y') }}
+                                                    </td>
                                                     <td>
                                                         <a class="me-3"
                                                             href="{{ route('owner.pengeluaran.pengeluaran.edit', ['id' => Crypt::encrypt($expense->id)]) }}">
@@ -138,7 +136,6 @@
             </div>
         </div>
     </div>
-
 @endsection
 <?php
 $title = e($__env->yieldContent('title'));

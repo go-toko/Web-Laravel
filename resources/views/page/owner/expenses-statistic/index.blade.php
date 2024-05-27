@@ -71,7 +71,20 @@
                                     <select name="month" id="month"
                                         class="select @error('month') is-invalid @enderror">
                                         @php
-                                            $months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                                            $months = [
+                                                'Januari',
+                                                'Februari',
+                                                'Maret',
+                                                'April',
+                                                'Mei',
+                                                'Juni',
+                                                'Juli',
+                                                'Agustus',
+                                                'September',
+                                                'Oktober',
+                                                'November',
+                                                'Desember',
+                                            ];
                                         @endphp
                                         @foreach ($months as $index => $month)
                                             <option value="{{ $index + 1 }}">{{ $month }}</option>
@@ -81,7 +94,7 @@
                             </div>
                             <div class="col-6 col-lg-2" id="categoryField">
                                 <div class="form-group">
-                                    <label>Kategori dalam Toko</label>
+                                    <label>Kategori</label>
                                     <select name="category" id="category"
                                         class="select @error('category') is-invalid @enderror">
                                     </select>
@@ -95,7 +108,6 @@
             </div>
         </div>
     </div>
-
 @endsection
 <?php
 $title = e($__env->yieldContent('title'));

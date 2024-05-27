@@ -9,10 +9,9 @@ use App\Models\Province;
 use App\Models\Regency;
 use App\Models\ShopModel;
 use App\Models\Village;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class StoreController extends Controller
 {
@@ -24,17 +23,11 @@ class StoreController extends Controller
     public function index()
     {
         $userId = Auth::user()->id;
-        $deletedStore = ShopModel::where([
-            ['user_id', $userId],
-            ['isActive', false]
-        ])->get();
         $storeUser = ShopModel::where([
             ['user_id', $userId],
-            ['isActive', true]
         ])->get();
         return view('page.owner.settings.store.index', [
             'stores' => $storeUser,
-            'deletedStores' => $deletedStore
         ]);
     }
 
@@ -65,10 +58,11 @@ class StoreController extends Controller
         $request['district'] = District::where('id', $request->district)->first()->name;
         $request['village'] = Village::where('id', $request->village)->first()->name;
         $request['user_id'] = Auth::user()->id;
-        // dd($request);
+        $request['balance'] = $request->balance ? implode('', explode('.', str_replace('Rp', '', $request->balance))) : null;
+
         try {
             ShopModel::create([
-                'name' => Str::lower($request->name),
+                'name' => $request->name,
                 'description' => $request->description,
                 'user_id' => $request->user_id,
                 'province' => $request->province,
@@ -76,14 +70,12 @@ class StoreController extends Controller
                 'district' => $request->district,
                 'village' => $request->village,
                 'address' => $request->address,
+                'balance' => $request->balance ?? 0,
             ]);
-            // ShopModel::create([
-            //     'name' => 
-            // ]);
         } catch (\Throwable $e) {
             return back()->with(['error', 'Something wrong', 'type' => 'error']);
         }
-        return redirect(route('owner.settings.store.index'))->with(['success' => 'Success make new store', 'type' => 'success']);
+        return redirect(route('owner.pengaturan.daftar-toko.index'))->with(['success' => 'Berhasil membuat toko baru', 'type' => 'success']);
     }
 
     /**
@@ -142,7 +134,7 @@ class StoreController extends Controller
         // dd($request);
         try {
             $dataStore->update([
-                'name' => Str::lower($request->name),
+                'name' => $request->name,
                 'description' => $request->description,
                 'province' => $request->province,
                 'regency' => $request->regency,
@@ -153,8 +145,7 @@ class StoreController extends Controller
         } catch (\Throwable $e) {
             return back()->with(['type' => 'error', 'error' => 'Something wrong']);
         }
-        return redirect(route('owner.settings.store.index'))->with(['type' => 'success', 'success' => 'Successfully changed data']);
-        // dd($request, $id, $dataStore, gettype($request->province));
+        return redirect(route('owner.pengaturan.daftar-toko.index'))->with(['type' => 'success', 'success' => 'Successfully changed data']);
     }
 
     /**
@@ -175,5 +166,22 @@ class StoreController extends Controller
             return response()->json(['status' => 'error']);
         }
         return response()->json(['status' => 'success']);
+    }
+
+    public function restore($id)
+    {
+        $id = Crypt::decrypt($id);
+        $store = ShopModel::findOrFail($id);
+        try {
+            DB::beginTransaction();
+            $store->update([
+                'isActive' => true
+            ]);
+            DB::commit();
+            return response()->json(['msg' => 'Berhasil mengaktifkan toko kembali.']);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['msg' => 'Gagal. Coba lagi!']);
+        }
     }
 }

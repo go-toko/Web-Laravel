@@ -43,8 +43,7 @@
                                             <label>Nama Kategori</label>
                                             <input id="name" name="name" type="text"
                                                 class="form-control @error('name') is-invalid @enderror"
-                                                value="{{ Str::headline(old('name') ?? ($data->name ?? null)) }}" autofocus
-                                                required>
+                                                value="{{ old('name') ?? ($data->name ?? null) }}" autofocus required>
                                             @error('name')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror

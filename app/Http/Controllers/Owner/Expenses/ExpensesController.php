@@ -7,12 +7,12 @@ use App\Exports\OwnerReportExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Owner\ExpensesValidate;
 use App\Models\ExpensesCategoryModel;
-use App\Models\ExpensesHistoryModel;
 use App\Models\ExpensesModel;
 use App\Models\ShopModel;
 use Carbon\Carbon;
 use Dompdf\Dompdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -28,23 +28,9 @@ class ExpensesController extends Controller
      */
     public function index(Request $request)
     {
-        if ($request->query('startDate')) {
-            $startDate = Carbon::createFromFormat('d-m-Y', $request->query('startDate'))->format('Y-m-d');
-        }
-        $endDate = $request->query('endDate') ?
-            Carbon::createFromFormat('d-m-Y', $request->query('endDate'))->format('Y-m-d') :
-            Carbon::now()->format('Y-m-d');
-        $expenses = $request->query('startDate') ?
-            ExpensesModel::with('category')
-            ->whereBetween('date', [$startDate, $endDate])
-            ->where(['isActive' => true, 'shop_id' => Crypt::decrypt(Session::get('active'))])
-            ->get() :
-            ExpensesModel::with('category')
-            ->where(['isActive' => true, 'shop_id' => Crypt::decrypt(Session::get('active'))])
-            ->get();
-
+        $expenses = $this->getDataByFilter($request);
         return view('page.owner.expenses.index', [
-            'expenses' => $expenses
+            'expenses' => $expenses->sortByDesc('date'),
         ]);
     }
 
@@ -77,31 +63,23 @@ class ExpensesController extends Controller
             $shop = ShopModel::where(['id' => $idShop])->first();
             $request['amount'] = implode('', explode('.', str_replace('Rp', '', $request->amount)));
 
-            if ($shop->balance < $request->amount) {
-                throw new CustomException('Saldo tidak cukup', 400);
-            }
+            // Saldo
+            // if ($shop->balance < $request->amount) {
+            //     throw new CustomException('Saldo tidak cukup', 400);
+            // }
 
             DB::beginTransaction();
-            $shop->update([
-                'balance' => $shop->balance - $request->amount,
-            ]);
+            // $shop->update([
+            //     'balance' => $shop->balance - $request->amount,
+            // ]);
 
-            $newExpense = ExpensesModel::create([
-                'name' => Str::lower($request->name),
+            ExpensesModel::create([
+                'name' => $request->name,
                 'category_id' => $request->category,
                 'shop_id' => $idShop,
                 'description' => $request->description,
-                'date' => Carbon::createFromFormat('d-m-Y', $request->date)->format('Y-m-d'),
+                'date' => Carbon::createFromFormat('d-m-Y', $request->date),
                 'amount' => $request->amount,
-            ]);
-            ExpensesHistoryModel::create([
-                'shop_id' => $idShop,
-                'expense_id' => $newExpense->id,
-                'category' => $newExpense->category->name,
-                'name' => $newExpense->name,
-                'description' => $newExpense->description,
-                'amount' => $newExpense->amount,
-                'date' => $newExpense->date,
             ]);
             DB::commit();
         } catch (\Throwable $e) {
@@ -153,36 +131,29 @@ class ExpensesController extends Controller
         try {
             // DONE: implement store balance adjustment 
             $expense = $this->getExpenseById($id);
-            $expenseHistory = ExpensesHistoryModel::where('expense_id', $expense->id)->first();
             $shop = $this->getShopActive();
 
             // Convert Rp. format to number only 
             $request['amount'] = implode('', explode('.', str_replace('Rp', '', $request->amount)));
 
-            if ($shop->balance + $expense->amount - $request->amount < 0) {
-                throw new CustomException('Saldo tidak cukup untuk melakukan pengeditan pengeluaran ini. Silahkan cek saldo anda!');
-            }
+            // Saldo
+            // if ($shop->balance + $expense->amount - $request->amount < 0) {
+            //     throw new CustomException('Saldo tidak cukup untuk melakukan pengeditan pengeluaran ini. Silahkan cek saldo anda!');
+            // }
+
             DB::beginTransaction();
-            $shop->update([
-                'balance' => $shop->balance + $expense->amount - $request->amount,
-            ]);
+            // $shop->update([
+            //     'balance' => $shop->balance + $expense->amount - $request->amount,
+            // ]);
 
             // Save updated expense information
-            $updatedExpense = $expense->update([
-                'name' => Str::lower($request->name),
+            $expense->update([
+                'name' => $request->name,
                 'category_id' => $request->category,
                 'description' => $request->description,
-                'date' => Carbon::createFromFormat('d-m-Y', $request->date)->format('Y-m-d'),
+                'date' => Carbon::createFromFormat('d-m-Y', $request->date),
                 'amount' => $request->amount,
             ]);
-            if ($updatedExpense)
-                $expenseHistory->update([
-                    'name' => $expense->name,
-                    'category' => $expense->category->name,
-                    'description' => $expense->description,
-                    'date' => $expense->date,
-                    'amount' => $expense->amount,
-                ]);
             DB::commit();
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -206,9 +177,7 @@ class ExpensesController extends Controller
             $data = $this->getExpenseById($id);
             if (!$data) return response()->json(["msg" => "Gagal menghapus pengeluaran. Coba lagi!!"]);
 
-            $data->update([
-                'isActive' => false,
-            ]);
+            $data->delete();
             return response()->json(["msg" => "Pengeluaran berhasil dihapus."]);
         } catch (\Throwable $th) {
             return response()->json(["msg" => "Gagal menghapus pengeluaran. Coba lagi!!"]);
@@ -218,9 +187,9 @@ class ExpensesController extends Controller
     private function getCategories()
     {
         $idShop = Crypt::decrypt(Session::get('active'));
-        $categories = ExpensesCategoryModel::where(['isActive' => true, 'isParent' => true])->get();
+        $categories = ExpensesCategoryModel::where(['user_id' => Auth::user()->id, 'isActive' => true, 'isParent' => true])->get();
         if (Session::has('active')) {
-            $categoriesShop = ExpensesCategoryModel::where(['shop_id' => $idShop, 'isActive' => true])->get();
+            $categoriesShop = ExpensesCategoryModel::where(['user_id' => Auth::user()->id, 'shop_id' => $idShop, 'isActive' => true])->get();
             $categories = $categories->merge($categoriesShop);
         }
         return $categories;
@@ -236,21 +205,29 @@ class ExpensesController extends Controller
         return ShopModel::where(['id' => Crypt::decrypt(Session::get('active')), 'isActive' => true])->first();
     }
 
-    public function reportPdf(Request $request)
+    private function getDataByFilter(Request $request)
     {
+        $startDate = null;
+        $endDate = Carbon::now()->format('Y-m-d');
         $idShop = Crypt::decrypt(Session::get('active'));
+        $expenses = ExpensesModel::with('category')->where(['shop_id' => $idShop]);
+        if ($request->query('endDate')) {
+            $endDate = Carbon::createFromFormat('d-m-Y', $request->query('endDate'))->format('Y-m-d');
+        }
+
         if ($request->query('startDate')) {
             $startDate = Carbon::createFromFormat('d-m-Y', $request->query('startDate'))->format('Y-m-d');
+            $expenses = $expenses->whereBetween('date', [$startDate, $endDate]);
         }
-        $endDate = $request->query('endDate') ?
-            Carbon::createFromFormat('d-m-Y', $request->query('endDate'))->format('Y-m-d') :
-            Carbon::now()->format('Y-m-d');
+        return $expenses->get();
+    }
 
-        $expenses = $request->query('startDate') ?
-            ExpensesModel::with('category')->whereBetween('date', [$startDate, $endDate])->where(['isActive' => true, 'shop_id' => Crypt::decrypt(Session::get('active'))])->get() :
-            ExpensesModel::with('category')->where(['isActive' => true, 'shop_id' => $idShop])->get();
-
-        $html = view('page.owner.expenses.report', ['expenses' => $expenses]);
+    public function reportPdf(Request $request)
+    {
+        $expenses = $this->getDataByFilter($request);
+        $html = view('page.owner.expenses.report', [
+            'expenses' => $expenses->sortByDesc('date')
+        ]);
 
         // Dompdf
         $pdf = new Dompdf();
@@ -266,20 +243,9 @@ class ExpensesController extends Controller
 
     public function reportExcel(Request $request)
     {
-        $idShop = Crypt::decrypt(Session::get('active'));
-        if ($request->query('startDate')) {
-            $startDate = Carbon::createFromFormat('d-m-Y', $request->query('startDate'))->format('Y-m-d');
-        }
-        $endDate = $request->query('endDate') ?
-            Carbon::createFromFormat('d-m-Y', $request->query('endDate'))->format('Y-m-d') :
-            Carbon::now()->format('Y-m-d');
-
-        $expenses = $request->query('startDate') ?
-            ExpensesModel::with('category')->whereBetween('date', [$startDate, $endDate])->where(['isActive' => true, 'shop_id' => Crypt::decrypt(Session::get('active'))])->get() :
-            ExpensesModel::with('category')->where(['isActive' => true, 'shop_id' => $idShop])->get();
-
+        $expenses = $this->getDataByFilter($request);
         $view = view('page.owner.expenses.report-excel', [
-            'expenses' => $expenses
+            'expenses' => $expenses->sortByDesc('date')
         ]);
         return Excel::download(new OwnerReportExport($view), time() . '-laporan-pengeluaran.xlsx');
     }

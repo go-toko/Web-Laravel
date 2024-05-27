@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class SalesDetailModel extends Model
 {
     use HasFactory;
-    protected $table = 'sale_details';
+    protected $table = 'sales_details';
     protected $guarded = ['id'];
 
     public function sales()

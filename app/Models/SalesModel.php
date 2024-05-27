@@ -10,6 +10,9 @@ class SalesModel extends Model
     use HasFactory;
     protected $table = 'sales';
     protected $guarded = ['id'];
+    public const status = ['PAID', 'PARTIAL_PAID', 'UNPAID', 'VOID'];
+    public const payment_method = ['CASH', 'QRIS'];
+    public const display_status = ['Lunas', 'Lunas Sebagian', 'Belum dibayar', 'Batal'];
 
     public function cashier()
     {

@@ -72,7 +72,7 @@ class User extends Authenticatable
         return $this->hasMany(ShopModel::class, foreignKey: 'user_id');
     }
 
-    public function userCashierProfile()
+    public function userCashier()
     {
         return $this->hasOne(UserCashierModel::class, foreignKey: 'user_id');
     }

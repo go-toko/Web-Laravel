@@ -93,7 +93,6 @@ class PaydisiniController extends Controller
                 return response()->json([
                     'success' => true,
                 ]);
-
             } catch (\Exception $e) {
                 DB::rollBack();
 

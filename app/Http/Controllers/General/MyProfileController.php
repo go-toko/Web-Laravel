@@ -88,7 +88,7 @@ class MyProfileController extends Controller
         // Profile Picture handler
         if ($request->hasFile('picture')) {
 
-
+            
             if ($data->picturePath &&  Storage::disk('s3')->exists($data->picturePath)) {
                 Storage::disk('s3')->delete($data->picturePath);
             }
@@ -145,7 +145,7 @@ class MyProfileController extends Controller
             ]);
 
             DB::commit();
-        } catch (\Throwable $exception) {
+        } catch (\Throwable$exception) {
             DB::rollback();
             Log::error('Error when update data to databases in user_profile, the error is : \n' . $exception);
             return response()->json(['status' => 0, 'msg' => $exception]);

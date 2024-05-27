@@ -79,10 +79,6 @@
 @endsection
 
 @section('forscript')
-    {{-- Toast import js --}}
-    <script src="{{ URL::asset('/assets/plugins/toastr/toastr.min.js') }}"></script>
-    <script src="{{ URL::asset('/assets/plugins/toastr/toastr.js') }}"></script>
-
     <script>
         $(function() {
             $("#login_form").on('submit', function(e) {
@@ -124,7 +120,7 @@
                             spinSpan.remove();
 
                             // add warning to html
-                            var error = document.getElementById('login-error')
+                            var error = document.getElementById('')
                             error.append(data.error)
                             toastr.error(data.msg, 'Error')
                         }

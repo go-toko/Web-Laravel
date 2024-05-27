@@ -1,7 +1,7 @@
 <?php $page = 'menus'; ?>
 @extends('layout.mainlayout')
 
-@section('title', 'Daftar Toko')
+@section('title', 'My Store')
 
 @section('forhead')
     {{-- Toastr Style --}}
@@ -23,8 +23,8 @@
                     </h6>
                 </div>
                 <div class="page-btn">
-                    <a href="{{ route('owner.pengaturan.daftar-toko.add') }}" class="btn btn-added">
-                        <img src="{{ URL::asset('assets/img/icons/plus.svg') }}" class="me-1" alt="img">Tambah Toko
+                    <a href="{{ route('owner.settings.store.add') }}" class="btn btn-added">
+                        <img src="{{ URL::asset('assets/img/icons/plus.svg') }}" class="me-1" alt="img">Add Store
                     </a>
                 </div>
             </div>
@@ -37,32 +37,42 @@
                             <table class="table datanew">
                                 <thead>
                                     <tr>
-                                        <th class="col-2">Nama</th>
-                                        <th class="col-2">Deskripsi</th>
-                                        <th class="col-5">Alamat</th>
-                                        <th class="col-1">Saldo</th>
-                                        <th class="col-1">Status</th>
-                                        <th class="col-1">Aksi</th>
+                                        <th class="col-0">
+                                            <label class="checkboxs">
+                                                <input type="checkbox" id="select-all" />
+                                                <span class="checkmarks"></span>
+                                            </label>
+                                        </th>
+                                        <th class="col-2">Name</th>
+                                        <th class="col-2">Description</th>
+                                        <th class="col-5">Address</th>
+                                        <th class="col-2">Status</th>
+                                        <th class="col-1">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($stores as $store)
                                         <tr>
+                                            <td>
+                                                <label class="checkboxs">
+                                                    <input type="checkbox" />
+                                                    <span class="checkmarks"></span>
+                                                </label>
+                                            </td>
                                             <td>{{ Str::headline($store->name) }}</td>
                                             <td>{{ $store->description }}</td>
                                             <td>
                                                 {{ $store?->address ? $store->address . ', ' . $store->village . ', ' . $store->district . ', ' . $store->regency . ', ' . $store->province : $store->village . ', ' . $store->district . ', ' . $store->regency . ', ' . $store->province }}
                                             </td>
-                                            <td>{{ 'Rp' . number_format($store->balance, 0, ',', '.') }}</td>
                                             <td>{{ $store->isActive }}</td>
                                             <td>
                                                 <a class="me-3"
-                                                    href="{{ route('owner.pengaturan.daftar-toko.edit', ['id' => Crypt::encrypt($store->id)]) }}">
+                                                    href="{{ route('owner.settings.store.edit', ['id' => Crypt::encrypt($store->id)]) }}">
                                                     <img src="{{ URL::asset('assets/img/icons/edit.svg') }}"
                                                         alt="img" />
                                                 </a>
                                                 <a class="me-3" id="confirm-delete"
-                                                    data-action="{{ route('owner.pengaturan.daftar-toko.delete', ['id' => Crypt::encrypt($store->id)]) }}">
+                                                    data-action="{{ route('owner.settings.store.delete', ['id' => Crypt::encrypt($store->id)]) }}">
                                                     <img src="{{ URL::asset('assets/img/icons/delete.svg') }}"
                                                         alt="img" />
                                                 </a>
@@ -74,7 +84,7 @@
                         </div>
                     </section>
                 </div>
-                {{-- @if (count($deletedStores) > 0)
+                @if ($deletedStores)
                     <div class="col-sm-12">
                         <div>
                             <h3 class="text-center">Deleted Store</h3>
@@ -90,12 +100,11 @@
                                                     <span class="checkmarks"></span>
                                                 </label>
                                             </th>
-                                            <th class="col-2">Nama</th>
-                                            <th class="col-2">Deskripsi</th>
-                                            <th class="col-5">Alamat</th>
-                                            <th class="col-1">Status</th>
-                                            <th class="col-1">Saldo</th>
-                                            <th class="col-1">Aksi</th>
+                                            <th class="col-2">Name</th>
+                                            <th class="col-2">Description</th>
+                                            <th class="col-5">Address</th>
+                                            <th class="col-2">Status</th>
+                                            <th class="col-1">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -114,15 +123,14 @@
                                                     {{ $store?->address ? $store->address . ', ' . $store->village . ', ' . $store->district . ', ' . $store->regency . ', ' . $store->province : $store->village . ', ' . $store->district . ', ' . $store->regency . ', ' . $store->province }}
                                                 </td>
                                                 <td>{{ $store->isActive }}</td>
-                                                <td>{{ $store->balance }}</td>
                                                 <td>
                                                     <a class="me-3"
-                                                        href="{{ route('owner.pengaturan.daftar-toko.edit', ['id' => Crypt::encrypt($store->id)]) }}">
+                                                        href="{{ route('owner.settings.store.edit', ['id' => Crypt::encrypt($store->id)]) }}">
                                                         <img src="{{ URL::asset('assets/img/icons/edit.svg') }}"
                                                             alt="img" />
                                                     </a>
                                                     <a class="me-3" id="confirm-delete"
-                                                        data-action="{{ route('owner.pengaturan.daftar-toko.delete', ['id' => Crypt::encrypt($store->id)]) }}">
+                                                        data-action="{{ route('owner.settings.store.delete', ['id' => Crypt::encrypt($store->id)]) }}">
                                                         <img src="{{ URL::asset('assets/img/icons/delete.svg') }}"
                                                             alt="img" />
                                                     </a>
@@ -134,7 +142,7 @@
                             </div>
                         </section>
                     </div>
-                @endif --}}
+                @endif
             </div>
         </div>
     </div>
@@ -152,37 +160,21 @@ $msg = Session::get($type);
     <script src="{{ URL::asset('/assets/plugins/toastr/toastr.min.js') }}"></script>
     <script src="{{ URL::asset('/assets/plugins/toastr/toastr.js') }}"></script>
 
-    @if ($type != null)
-        <script>
-            let type = {!! json_encode($type) !!};
-            let msg = {!! json_encode($msg) !!};
-            const title = {!! json_encode($title) !!};
-            toastr[type](msg, title)
-        </script>
-    @endif
     <script>
-        function formatRupiah(angka, prefix) {
-            var number_string = angka.replace(/[^,\d]/g, '').toString(),
-                split = number_string.split(','),
-                sisa = split[0].length % 3,
-                rupiah = split[0].substr(0, sisa),
-                ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-
-            if (ribuan) {
-                separator = sisa ? '.' : '';
-                rupiah += separator + ribuan.join('.');
+        let type = {!! json_encode($type) !!};
+        let msg = {!! json_encode($msg) !!};
+        const title = {!! json_encode($title) !!};
+        @if (Session::has($type))
+            {
+                toastr[type](msg, title, {
+                    closeButton: !0,
+                    tapToDismiss: !1,
+                    positionClass: 'toast-top-center',
+                })
             }
-
-            rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
-            return prefix == undefined ? rupiah : (rupiah ? prefix + rupiah : '');
-        }
-
-        $(document).ready(function() {
-            $('.storeBalance').each(function() {
-                $(this).text(formatRupiah($(this).text(), 'Rp'));
-            })
-        })
-
+        @endif
+    </script>
+    <script>
         $(document).on('click', '#confirm-delete', function(event) {
             event.preventDefault();
             const url = $(this).data('action');

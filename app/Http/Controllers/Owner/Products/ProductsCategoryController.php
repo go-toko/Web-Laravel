@@ -2,16 +2,13 @@
 
 namespace App\Http\Controllers\Owner\Products;
 
-use App\Exports\OwnerReportExport;
 use App\Models\ProductsCategoryModel;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Owner\CategoryValidate;
-use Dompdf\Dompdf;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
-use Maatwebsite\Excel\Facades\Excel;
 
 class ProductsCategoryController extends Controller
 {
@@ -52,6 +49,13 @@ class ProductsCategoryController extends Controller
     public function store(CategoryValidate $request)
     {
         try {
+            if ($request->hasFile('image')) {
+                $filename = round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
+                $request->file('image')->move(public_path('images/category'), $filename);
+            } else {
+                $filename = 'noimage.png';
+            }
+
             if (Session::has('active')) {
                 $idShop = Crypt::decrypt(Session::get('active'));
                 ProductsCategoryModel::create([
@@ -59,19 +63,32 @@ class ProductsCategoryController extends Controller
                     'name' => Str::lower($request->name),
                     'code' => $request->code,
                     'description' => $request->description,
+                    'images' => $filename,
                 ]);
             } else {
                 ProductsCategoryModel::create([
                     'name' => Str::lower($request->name),
                     'code' => $request->code,
                     'description' => $request->description,
+                    'images' => $filename,
                     'isParent' => true,
                 ]);
             }
         } catch (\Throwable $th) {
             return back()->with(['type' => 'error', 'error' => 'Something wrong']);
         }
-        return redirect(route('owner.produk.kategori.index'))->with(['success' => "Success saving data ✅", 'type' => 'success']);
+        return redirect(route('owner.products.category.index'))->with(['success' => "Success saving data ✅", 'type' => 'success']);
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  \App\Models\ProductsCategoryModel  $productsCategoryModel
+     * @return \Illuminate\Http\Response
+     */
+    public function show(ProductsCategoryModel $productsCategoryModel)
+    {
+        //
     }
 
     /**
@@ -121,7 +138,7 @@ class ProductsCategoryController extends Controller
         } catch (\Throwable $th) {
             return back()->with(['error' => 'Error when submit to system'], ['type' => 'error']);
         }
-        return redirect(route('owner.produk.kategori.index'))->with(['success' => 'Success saving data 😎', 'type' => 'success']);
+        return redirect(route('owner.products.category.index'))->with(['success' => 'Success saving data 😎', 'type' => 'success']);
     }
 
     /**
@@ -147,45 +164,5 @@ class ProductsCategoryController extends Controller
         } catch (\Throwable $th) {
             return response()->json(['status' => 'error']);
         }
-    }
-
-    public function reportPdf()
-    {
-        $categories = ProductsCategoryModel::where(['isActive' => true, 'isParent' => true])->get();
-        if (Session::has('active')) {
-            $id = Crypt::decrypt(Session::get('active'));
-            $categoriesShop = ProductsCategoryModel::where(['isActive' => true, 'shop_id' => $id])->get();
-            $categories = $categories->merge($categoriesShop);
-        }
-
-        $categories = $categories->sortByDesc('created_at');
-
-        $html = view('page.owner.products-category.report-pdf', ['categories' => $categories]);
-
-        // Dompdf
-        $pdf = new Dompdf();
-        $pdf->loadHtml($html);
-        $pdf->setPaper('A4', 'landscape');
-
-        // Render file pdf
-        $pdf->render();
-
-        return $pdf->stream(time() . '-laporan-kategori-produk.pdf');
-    }
-
-    public function reportExcel()
-    {
-        $categories = ProductsCategoryModel::where(['isActive' => true, 'isParent' => true])->get();
-        if (Session::has('active')) {
-            $id = Crypt::decrypt(Session::get('active'));
-            $categoriesShop = ProductsCategoryModel::where(['isActive' => true, 'shop_id' => $id])->get();
-            $categories = $categories->merge($categoriesShop);
-        }
-
-        $categories = $categories->sortByDesc('created_at');
-
-        $view = view('page.owner.products-category.report-excel', ['categories' => $categories]);
-
-        return Excel::download(new OwnerReportExport($view), time() . '-laporan-ketegori-produk.xlsx');
     }
 }

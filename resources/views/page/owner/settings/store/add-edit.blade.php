@@ -1,7 +1,7 @@
 <?php $page = 'menus'; ?>
 @extends('layout.mainlayout')
 
-@section('title', isset($data) ? 'Edit Toko' : 'Tambah Toko')
+@section('title', isset($data) ? 'Edit Store' : 'Add Store')
 
 @section('forhead')
     {{-- Toastr Style --}}
@@ -18,8 +18,7 @@
                     <h6>
                         <ul class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{ url('owner/dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="{{ url('owner/pengaturan/daftar-toko') }}">Daftar Toko</a>
-                            </li>
+                            <li class="breadcrumb-item"><a href="{{ url('owner/settings/store') }}">Store</a></li>
                             <li class="breadcrumb-item active"> @yield('title') </li>
                         </ul>
                     </h6>
@@ -32,7 +31,7 @@
                     <section class="comp-section">
                         <div class="card-body">
                             <form
-                                action="{{ isset($data) ? route('owner.pengaturan.daftar-toko.update', Crypt::encrypt($data->id)) : route('owner.pengaturan.daftar-toko.store') }}"
+                                action="{{ isset($data) ? route('owner.settings.store.update', Crypt::encrypt($data->id)) : route('owner.settings.store.store') }}"
                                 method="post">
                                 @csrf
                                 @if (isset($data))
@@ -41,7 +40,7 @@
                                 <div class="row">
                                     <div class="col-lg-3 col-sm-6 col-12">
                                         <div class="form-group">
-                                            <label>Nama Toko</label>
+                                            <label>Store Name</label>
                                             <input id="name" name="name" type="text"
                                                 class="form-control @error('name') is-invalid @enderror"
                                                 value="{{ old('name') ?? ($data->name ?? null) }}" autofocus required>
@@ -52,7 +51,7 @@
                                     </div>
                                     <div class="col-lg-3 col-sm-6 col-12">
                                         <div class="form-group">
-                                            <label>Deskripsi</label>
+                                            <label>Store Description</label>
                                             <input id="description" name="description" type="text"
                                                 class="form-control @error('description')
                                                 is-invalid
@@ -65,19 +64,7 @@
                                     </div>
                                     <div class="col-lg-3 col-sm-6 col-12">
                                         <div class="form-group">
-                                            <label for="balance">Saldo</label>
-                                            <input type="text" name="balance" id="balance"
-                                                class="form-control @error('balance') is-invalid @enderror"
-                                                value="{{ old('balance') ?? ($data->balance ?? null) }}"
-                                                {{ isset($data) ? 'readonly' : '' }}>
-                                            @error('balance')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-3 col-sm-6 col-12">
-                                        <div class="form-group">
-                                            <label>Provinsi</label>
+                                            <label>Store Province</label>
                                             <select name="province" id="province"
                                                 class="select @error('province') is-invalid @enderror">
                                                 <option value="null" selected disabled>-- Select --</option>
@@ -96,7 +83,7 @@
                                     </div>
                                     <div class="col-lg-3 col-sm-6 col-12">
                                         <div class="form-group">
-                                            <label>Kabupaten</label>
+                                            <label>Store Regency</label>
                                             <select name="regency" id="regency"
                                                 class="select  @error('regency') is-invalid @enderror">
                                                 <option value="null" selected disabled>-- Select --</option>
@@ -110,7 +97,7 @@
                                     </div>
                                     <div class="col-lg-3 col-sm-6 col-12">
                                         <div class="form-group">
-                                            <label>Kecamatan</label>
+                                            <label>Store District</label>
                                             <select name="district" id="district"
                                                 class="select @error('district') is-invalid @enderror">
                                                 <option value="null" selected disabled>-- Select --</option>
@@ -124,7 +111,7 @@
                                     </div>
                                     <div class="col-lg-3 col-sm-6 col-12">
                                         <div class="form-group">
-                                            <label>Desa</label>
+                                            <label>Store Village</label>
                                             <select name="village" id="village"
                                                 class="select @error('village') is-invalid @enderror">
                                                 <option value="null" selected disabled>-- Select --</option>
@@ -139,14 +126,13 @@
 
                                     <div class="col-lg-12">
                                         <div class="form-group">
-                                            <label>Alamat <span class="text-muted">(tidak wajib)</span></label>
+                                            <label>Address <span class="text-muted">(optional)</span></label>
                                             <textarea id="address" name="address" class="form-control">{{ old('address') ?? ($data->address ?? null) }}</textarea>
                                         </div>
                                     </div>
                                     <div class="col-lg-12">
-                                        <button type="submit" class="btn btn-submit me-2">Kirim</button>
-                                        <a href="{{ route('owner.pengaturan.daftar-toko.index') }}"
-                                            class="btn btn-cancel">Batal</a>
+                                        <button type="submit" class="btn btn-submit me-2">Submit</button>
+                                        <a href="{{ URL::previous() }}" class="btn btn-cancel">Cancel</a>
                                     </div>
                                 </div>
                             </form>
@@ -178,30 +164,6 @@ $msg = Session::get($type);
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 }
             })
-        })
-
-        function formatRupiah(angka, prefix) {
-            var number_string = angka.replace(/[^,\d]/g, '').toString(),
-                split = number_string.split(','),
-                sisa = split[0].length % 3,
-                rupiah = split[0].substr(0, sisa),
-                ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-
-            if (ribuan) {
-                separator = sisa ? '.' : '';
-                rupiah += separator + ribuan.join('.');
-            }
-
-            rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
-            return prefix == undefined ? rupiah : (rupiah ? prefix + rupiah : '');
-        }
-
-        $(document).ready(function() {
-            $('#balance').val(formatRupiah($('#balance').val(), 'Rp'))
-        })
-
-        $(document).on('keyup', '#balance', function() {
-            $(this).val(formatRupiah($(this).val(), 'Rp'))
         })
 
         // get and display kabupaten
@@ -265,14 +227,19 @@ $msg = Session::get($type);
         $(document).ready(function() {
             $('.select').select2()
         })
-    </script>
-    @if ($type != null)
-        <script>
-            let type = {!! json_encode($type) !!};
-            let msg = {!! json_encode($msg) !!};
-            const title = {!! json_encode($title) !!};
 
-            toastr[type](msg, title)
-        </script>
-    @endif
+        let type = {!! json_encode($type) !!};
+        let msg = {!! json_encode($msg) !!};
+        const title = {!! json_encode($title) !!};
+
+        @if (Session::has($type))
+            {
+                toastr[type](msg, title, {
+                    closeButton: !0,
+                    tapToDismiss: !1,
+                    positionClass: 'toast-top-center',
+                })
+            }
+        @endif
+    </script>
 @endsection

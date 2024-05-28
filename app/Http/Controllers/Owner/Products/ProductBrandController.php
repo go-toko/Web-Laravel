@@ -7,12 +7,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Owner\BrandValidate;
 use App\Models\ProductBrand;
 use Dompdf\Dompdf;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ProductBrandController extends Controller
@@ -50,8 +49,15 @@ class ProductBrandController extends Controller
     {
         try {
             if ($request->hasFile('image')) {
-                $filename = round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
-                $request->file('image')->move(public_path('images/brand'), $filename);
+                $filename = "images/brand/" . round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
+                $upload = Storage::disk('s3')->put($filename, file_get_contents($request->file('image')), 'public');
+
+                if (!$upload) {
+                    return back()->with(['error' => 'Gagal mengunggah gambar, Hubungi Admin', 'type' => 'error']);
+                }
+
+                // get url image
+                $filename = Storage::disk('s3')->url($filename);
             } else {
                 $filename = 'noimage.png';
             }
@@ -75,6 +81,7 @@ class ProductBrandController extends Controller
                 ]);
             }
         } catch (\Throwable $th) {
+            dd($th->getMessage());
             return back()->with(['error' => 'Gagal menambahkan merek', 'type' => 'error']);
         }
         return redirect(route('owner.produk.merek.index'))->with(['success' => 'Berhasil menambahkan merek ✅', 'type' => 'success']);
@@ -118,24 +125,33 @@ class ProductBrandController extends Controller
         try {
             $id = Crypt::decrypt($id);
             $data = ProductBrand::findOrFail($id);
-            if ($request->images != null) {
+
+            if ($request->image != null) {
                 // Delete old images if exists 
-                if (File::exists(public_path('images/brand' . $data->images))) {
-                    File::delete(public_path('images/brand' . $data->images));
+                if ($data->image != 'noimage.png' && Storage::disk('s3')->exists("images/brand/" . $data->image)) {
+                    Storage::disk('s3')->delete($data->images);
                 }
+
                 // Upload new images
-                $filename = round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
-                $request->file('image')->move(public_path('images/brand'), $filename);
-            } elseif ($request->images == null) {
-                $filename = $data->images;
+                $filename = "images/brand/" . round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
+                $upload = Storage::disk('s3')->put($filename, file_get_contents($request->file('image')), ['visibility' => 'public']);
+
+                if (!$upload) {
+                    return back()->with(['error' => 'Gagal mengunggah gambar, Hubungi Admin', 'type' => 'error']);
+                }
+
+                $filename = Storage::disk('s3')->url($filename);
             }
+
+
             $data->update([
                 'name' => $request->name,
                 'code' => $request->code,
                 'description' => $request->description,
-                'image' => $filename,
+                'images' => $filename ?? $data->image,
             ]);
         } catch (\Throwable $th) {
+            dd($th->getMessage());
             return back()->with(['type' => 'error', 'error' => 'Gagal mengubah merek']);
         }
         return redirect(route('owner.produk.merek.index'))->with(['type' => 'success', 'success' => 'Berhasil mengubah merek']);

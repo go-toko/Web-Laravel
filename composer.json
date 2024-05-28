@@ -12,14 +12,13 @@
         "azishapidin/indoregion": "^3.0",
         "barryvdh/laravel-debugbar": "^3.8",
         "barryvdh/laravel-dompdf": "^2.0",
-        "google/apiclient": "^2.13",
         "guzzlehttp/guzzle": "^7.7",
         "intervention/image": "^2.7",
         "laravel/framework": "^9.19",
         "laravel/sanctum": "^2.14.1",
-        "laravel/socialite": "^5.6",
+        "laravel/socialite": "^5.14",
         "laravel/tinker": "^2.7",
-        "league/flysystem-aws-s3-v3": "^3.13",
+        "league/flysystem-aws-s3-v3": "^3.0",
         "livewire/livewire": "^2.12",
         "maatwebsite/excel": "3.1.48",
         "midtrans/midtrans-php": "^2.5",
@@ -68,7 +67,8 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "sort-packages": true
+        "sort-packages": true,
+        "process-timeout": 600
     },
     "minimum-stability": "dev",
     "prefer-stable": true

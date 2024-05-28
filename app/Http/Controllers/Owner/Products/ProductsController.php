@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ProductsController extends Controller
@@ -65,8 +66,9 @@ class ProductsController extends Controller
     {
         try {
             if ($request->hasFile('image')) {
-                $filename = round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
-                $request->file('image')->move(public_path('images/products'), $filename);
+                $filename = 'images/products/' . round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
+                Storage::disk('s3')->put($filename, file_get_contents(public_path('images/products/' . $filename)), ['visibility' => 'public']);
+                $filename = Storage::disk('s3')->url($filename);
             } else {
                 $filename = 'noimage.png';
             }
@@ -142,9 +144,9 @@ class ProductsController extends Controller
                     File::delete(public_path('images/products/' . $productData->images));
                 }
                 // Store new image
-                $filename = round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
-                $request->file('image')->move(public_path('images/products'), $filename);
-                // dd($request);
+                $filename = "images/products/" . round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
+                Storage::disk('s3')->put($filename, file_get_contents($request->file('image')), ['visibility' => 'public']);
+                $filename = Storage::disk('s3')->url($filename);
                 $productData->update([
                     'images' => $filename
                 ]);

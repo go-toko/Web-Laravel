@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -99,22 +100,24 @@ class ProductsCategoryController extends Controller
         try {
             $id = Crypt::decrypt($id);
             $data = ProductsCategoryModel::findOrFail($id);
-            if ($request->images != null) {
+            if ($request->images != null && Storage::disk('s3')->exists('images/category/' . $data->images)) {
                 // Delete old images if exists 
-                if (File::exists(public_path('images/category/' . $data->images))) {
-                    File::delete(public_path('images/category/' . $data->images));
-                }
+                Storage::disk('s3')->delete('images/category/' . $data->images);
+
                 // Upload new images
                 $filename = round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
-                $request->file('image')->move(public_path('images/category'), $filename);
+                Storage::disk('s3')->put('images/category/' . $filename, file_get_contents($request->file('image')), ['visibility' => 'public']);
+
+                $filename = Storage::disk('s3')->url('images/category/' . $filename);
             } elseif ($request->images == null) {
                 $filename = $data->images;
             }
+
             $data->update([
                 'name' => $request->name,
                 'code' => $request->code,
                 'description' => $request->description,
-                'image' => $filename,
+                'images' => $filename,
             ]);
         } catch (\Throwable $th) {
             return back()->with(['error' => 'Error when submit to system'], ['type' => 'error']);
@@ -133,10 +136,8 @@ class ProductsCategoryController extends Controller
         try {
             $id = Crypt::decrypt($id);
             $data = ProductsCategoryModel::findOrFail($id);
-            if ($data->images && $data->images !== 'noimage.png') {
-                if (File::exists(public_path('images/category/' . $data->images))) {
-                    File::delete(public_path('images/category/' . $data->images));
-                }
+            if ($data->images && $data->images !== 'noimage.png' && Storage::disk('s3')->exists('images/category/' . $data->images)) {
+                Storage::disk('s3')->delete('images/category/' . $data->images);
             }
             $data->update([
                 'isActive' => false

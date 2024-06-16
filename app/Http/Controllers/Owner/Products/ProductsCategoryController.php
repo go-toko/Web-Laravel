@@ -107,8 +107,6 @@ class ProductsCategoryController extends Controller
                 // Upload new images
                 $filename = round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
                 Storage::disk('s3')->put('images/category/' . $filename, file_get_contents($request->file('image')), ['visibility' => 'public']);
-
-                $filename = Storage::disk('s3')->url('images/category/' . $filename);
             } elseif ($request->images == null) {
                 $filename = $data->images;
             }

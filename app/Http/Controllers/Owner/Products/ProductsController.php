@@ -146,7 +146,7 @@ class ProductsController extends Controller
                 // Store new image
                 $filename = "images/products/" . round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
                 Storage::disk('s3')->put($filename, file_get_contents($request->file('image')), ['visibility' => 'public']);
-                $filename = Storage::disk('s3')->url($filename);
+
                 $productData->update([
                     'images' => $filename
                 ]);

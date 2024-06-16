@@ -55,9 +55,6 @@ class ProductBrandController extends Controller
                 if (!$upload) {
                     return back()->with(['error' => 'Gagal mengunggah gambar, Hubungi Admin', 'type' => 'error']);
                 }
-
-                // get url image
-                $filename = Storage::disk('s3')->url($filename);
             } else {
                 $filename = 'noimage.png';
             }

@@ -92,7 +92,7 @@
                                     <td class="productimgname">
                                         <a href="javascript:void(0);" class="product-img">
                                             @if ($product->images != 'noimage.png')
-                                            <img src="{{  $product->images }}" alt="{{ $product->name }}" />
+                                            <img src="{{env("AWS_ENDPOINT_BUCKET")}}/{{  $product->images }}" alt="{{ $product->name }}" />
                                             @elseif ($product->images == 'noimage.png')
                                             <img src="{{ URL::asset('images/' . $product->images) }}" alt="{{ $product->name }}" />
                                             @endif

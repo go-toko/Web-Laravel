@@ -25,10 +25,10 @@ class PaymentWithdrawalController extends Controller
                 'status' => $status,
             ]);
 
-            if ($status == 'success') {
+            if ($status == 'failed') {
                 $shop = ShopModel::find($payment->shop_id);
                 $shop->update([
-                    'balance' => $shop->balance - $payment->amount,
+                    'balance' => $shop->balance + $payment->amount,
                 ]);
             }
 

@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Validator;
 use App\Models\SalesModel;
+use App\Models\ShopModel;
 use Illuminate\Support\Facades\DB;
 
 class PaydisiniController extends Controller
@@ -83,10 +84,26 @@ class PaydisiniController extends Controller
                     'payment_at' => $request->status === 'Success' ? now() : null,
                 ]);
 
-                // Update sales status
-                SalesModel::where('id', $data->sales_id)->update([
-                    'status' => $request->status === 'Success' ? 'PAID' : 'VOID',
-                ]);
+                $sales = SalesModel::where('id', $data->sales_id)->first();
+
+                if ($request->status === 'Success') {
+                    // Update sales status to paid
+                    $sales->update([
+                        'status' => 'PAID',
+                    ]);
+
+                    // Update shop balance
+                    $shop = ShopModel::where('id', $data->shop_id)->first();
+                    $shop->update([
+                        'balance' => $shop->balance + $data->amount,
+                    ]);
+                } else {
+                    // Update sales status to void
+                    $sales->update([
+                        'status' => 'VOID',
+                    ]);
+                }
+
 
                 DB::commit();
 

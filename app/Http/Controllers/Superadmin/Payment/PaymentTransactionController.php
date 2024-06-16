@@ -20,7 +20,7 @@ class PaymentTransactionController extends Controller
         $groupByStatus = $data->groupBy('status')->map(function ($item) {
             return $item->sum('amount');
         });
-        
+
         return view('page.superadmin.payment.transaction.detail', compact('data', 'groupByStatus'));
     }
 }

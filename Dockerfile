@@ -1,5 +1,5 @@
 # Install PHP
-FROM php:8.1-alpine AS php
+FROM php:8.2-alpine AS php
 
 # copy only composer.json and composer.lock
 COPY composer.* /app

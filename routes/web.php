@@ -18,17 +18,10 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [LoginController::class, 'index'])->middleware('web')->name('login');
+Route::post('/login', [LoginController::class, 'login'])->middleware('web')->name('login.post');
 Route::get('/login/google', [LoginController::class, 'redirectGoogle'])->middleware('web')->name('login.google');
 Route::get('/login/google/callback', [LoginController::class, 'handleGoogleCallback'])->name('login.google.callback');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-
-Route::get('/login/cashier', function(){
-    return view('page.auth.cashier-signin');
-})->middleware('web')->name('get-login-cashier');
-Route::post('/login/cashier', [LoginController::class, 'loginCashier'])->middleware('web')->name('login-cashier');
-
-// Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
-
 
 Route::group(['prefix' => 'my-profile', 'as' => 'my-profile.', 'middleware' => ['auth']], function () {
     Route::get('', [MyProfileController::class, 'index'])->name('index');

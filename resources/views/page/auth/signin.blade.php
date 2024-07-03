@@ -4,26 +4,33 @@
 @section('title', 'Login')
 
 @section('content')
-    <Form action="" method="POST" class="account-content">
-        @csrf
-        <div class="login-wrapper">
-            <div class="login-content">
-                <div class="login-userset">
-                    <div class="login-logo logo-normal">
-                        <img src="{{ URL::asset('/assets/img/Pos-gotoko-colorfull.png') }}" alt="img">
-                    </div>
-                    <a href="{{ url('index') }}" class="login-logo logo-white">
-                        <img src="{{ URL::asset('/assets/img/Pos-gotoko-white.png') }}" alt="">
-                    </a>
+    <div class="login-wrapper">
+        <div class="login-content">
+            <div class="login-userset">
+                <div class="login-logo logo-normal">
+                    <img src="{{ URL::asset('/assets/img/Pos-gotoko-colorfull.png') }}" alt="img">
+                </div>
+                <a href="{{ url('index') }}" class="login-logo logo-white">
+                    <img src="{{ URL::asset('/assets/img/Pos-gotoko-white.png') }}" alt="">
+                </a>
 
+                @if (session('error'))
+                    <div class="alert alert-danger">
+                        {{ session('error') }}
+                    </div>
+                @endif
+
+                <form action="{{ url('login') }}" method="POST">
+                    @csrf
                     <div class="login-userheading">
-                        <h3>Sign In</h3>
-                        <h4>Please login to your account</h4>
+                        <h3>Masuk</h3>
+                        <h4>Gunakan akun yang sudah terdaftar</h4>
                     </div>
                     <div class="form-login">
+                        @csrf
                         <label>Email</label>
                         <div class="form-addons">
-                            <input type="text" name="email" id="Email" value="admin@example.com">
+                            <input type="text" name="email" id="Email" placeholder="john@doe.com" value="">
                             <img src="{{ URL::asset('/assets/img/icons/mail.svg') }}" alt="img">
                         </div>
                         <div class="text-danger pt-2">
@@ -38,7 +45,8 @@
                     <div class="form-login">
                         <label>Password</label>
                         <div class="pass-group">
-                            <input type="password" class="pass-input" name="password" id="password" value="123456">
+                            <input type="password" class="pass-input" name="password" id="password" placeholder="********"
+                                value="">
                             <span class="fas toggle-password fa-eye-slash"></span>
                         </div>
                         <div class="text-danger pt-2">
@@ -52,42 +60,33 @@
                     </div>
                     <div class="form-login">
                         <div class="alreadyuser">
-                            <h4><a href="{{ url('forgetpassword') }}" class="hover-a">Forgot Password?</a></h4>
+                            <h4><a href="{{ url('forgetpassword') }}" class="hover-a">Lupa Password?</a></h4>
                         </div>
                     </div>
                     <div class="form-login">
-                        <button class="btn btn-login" type="submit">Sign In</button>
+                        <button class="btn btn-login" type="submit">Masuk</button>
                     </div>
-                    <div class="signinform text-center">
-                        <h4>Don’t have an account? <a href="{{ url('signup') }}" class="hover-a">Sign Up</a></h4>
-                    </div>
-                    <div class="form-setlogin">
-                        <h4>Or sign up with</h4>
-                    </div>
-                    <div class="form-sociallink">
-                        <ul>
-                            <li>
-                                <a href="{{ url('login/google') }}">
-                                    <img src="{{ URL::asset('/assets/img/icons/google.png') }}" class="me-2"
-                                        alt="google">
-                                    Sign Up using Google
-                                </a>
-                            </li>
-                            <li>
-                                <a href="javascript:void(0);">
-                                    <img src="{{ URL::asset('/assets/img/icons/facebook.png') }}" class="me-2"
-                                        alt="google">
-                                    Sign Up using Facebook
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
+                </form>
+                <div class="signinform text-center">
+                    <h4>Belum punya akun?<a href="{{ url('signup') }}" class="hover-a"> Daftar</a></h4>
                 </div>
-                <a href="{{ route('get-login-cashier') }}">Login to cashier account</a>
-            </div>
-            <div class="login-img">
-                <img src="{{ URL::asset('/assets/img/login.jpg') }}" alt="img">
+                <div class="form-setlogin">
+                    <h4>Masuk menggunakan</h4>
+                </div>
+                <div class="form-sociallink">
+                    <ul class="d-flex justify-content-center">
+                        <li>
+                            <a href="{{ url('login/google') }}">
+                                <img src="{{ URL::asset('/assets/img/icons/google.png') }}" class="me-2" alt="google">
+                                Masuk dengan Google
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
-    </Form>
+        <div class="login-img">
+            <img src="{{ URL::asset('/assets/img/login.jpg') }}" alt="img">
+        </div>
+    </div>
 @endsection

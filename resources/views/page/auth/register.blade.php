@@ -78,7 +78,7 @@
                     </div>
                 </form>
                 <div class="signinform text-center">
-                    <h4>Sudah punya akun?<a href="{{ url('login') }}" class="hover-a"> Masuk</a></h4>
+                    <h4>Sudah punya akun?<a href="{{ url('/') }}" class="hover-a"> Masuk</a></h4>
                 </div>
                 <div class="form-setlogin">
                     <h4>Atau</h4>

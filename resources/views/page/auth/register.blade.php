@@ -1,7 +1,7 @@
 <?php $page = 'signin'; ?>
 @extends('layout.mainlayout')
 
-@section('title', 'Login')
+@section('title', 'Register')
 
 @section('content')
     <div class="login-wrapper">
@@ -20,14 +20,28 @@
                     </div>
                 @endif
 
-                <form action="{{ url('login') }}" method="POST">
+                <form action="{{ url('register') }}" method="POST">
                     @csrf
                     <div class="login-userheading">
-                        <h3>Masuk</h3>
-                        <h4>Gunakan akun yang sudah terdaftar</h4>
+                        <h3>Daftar</h3>
+                        <h4>Silahkan isi data diri anda</h4>
                     </div>
                     <div class="form-login">
-                        @csrf
+                        <label>Nama</label>
+                        <div class="form-addons">
+                            <input type="text" name="name" id="name" placeholder="John Doe" value="">
+                        </div>
+                        <div class="text-danger pt-2">
+                            @error('0')
+                                {{ $message }}
+                            @enderror
+                            @error('email')
+                                {{ $message }}
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="form-login">
                         <label>Email</label>
                         <div class="form-addons">
                             <input type="text" name="email" id="Email" placeholder="john@doe.com" value="">
@@ -58,17 +72,13 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="form-login">
-                        <div class="alreadyuser">
-                            <h4><a href="{{ url('forgetpassword') }}" class="hover-a">Lupa Password?</a></h4>
-                        </div>
-                    </div>
+
                     <div class="form-login">
                         <button class="btn btn-login" type="submit">Masuk</button>
                     </div>
                 </form>
                 <div class="signinform text-center">
-                    <h4>Belum punya akun?<a href="{{ url('register') }}" class="hover-a"> Daftar</a></h4>
+                    <h4>Sudah punya akun?<a href="{{ url('login') }}" class="hover-a"> Masuk</a></h4>
                 </div>
                 <div class="form-setlogin">
                     <h4>Atau</h4>
@@ -78,7 +88,7 @@
                         <li>
                             <a href="{{ url('login/google') }}">
                                 <img src="{{ URL::asset('/assets/img/icons/google.png') }}" class="me-2" alt="google">
-                                Masuk dengan Google
+                                Daftar dengan Google
                             </a>
                         </li>
                     </ul>

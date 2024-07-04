@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
@@ -160,6 +161,7 @@ class LoginController extends Controller
     {
         Auth::logout();
         Session::forget('active');
+        Cache::forget('menus');
         return redirect(route('login'));
     }
 }

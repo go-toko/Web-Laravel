@@ -6,6 +6,7 @@ use App\Models\RoleMenuModel;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -35,8 +36,15 @@ class AppServiceProvider extends ServiceProvider
         View::composer('*', function ($view) {
             if (Auth::check()) {
                 $roleId = Auth::user()->role_id;
-                $menus = RoleMenuModel::where('role_id', $roleId)->with('menu.subMenu')->orderBy('order')->get();
-                $view->with('menus', $menus);
+
+                // Get Cachye for menu
+                $menu = Cache::get('menus', function () use ($roleId) {
+                    $data = RoleMenuModel::where('role_id', $roleId)->with('menu.subMenu')->orderBy('order')->get();
+                    Cache::put('menus', $data, 60 * 60 * 24);
+                    return $data;
+                });
+
+                $view->with('menus', $menu);
             }
         });
     }

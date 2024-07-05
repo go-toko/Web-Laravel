@@ -160,7 +160,6 @@ class LoginController extends Controller
     {
         Auth::logout();
         Session::forget('active');
-        Cache::forget('menus');
         return redirect(route('login'));
     }
 }

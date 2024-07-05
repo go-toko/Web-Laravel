@@ -80,6 +80,7 @@
                                                                             data-method="POST">Edit</button>
                                                                         <button type="button" id="confirm-delete"
                                                                             class="btn btn-sm btn-danger"
+                                                                            data-role_id="{{ $roleMenu->role_id }}"
                                                                             data-action="{{ route('superadmin.settings.menu.destroy', $roleMenu->menu->id) }}">Delete</button>
                                                                     </div>
                                                                 </div>

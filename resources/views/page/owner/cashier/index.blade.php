@@ -119,7 +119,7 @@
                         <div class="col-4 offset-xl-1 col-xl-3 text-center">
                             <img id="cashier-photo-profile" class="rounded-circle"
                                 style="height: 100px; width: 100px; object-fit: cover; object-position: center center"
-                                src="{{ URL::asset('images/default-profile.png') }}" alt="">
+                                src="{{ env('AWS_ENDPOINT_BUCKET') }}/noimage.png" alt="Foto Profil">
                         </div>
                         <div class="col-8 col-xl-7">
                             <h3 id="cashier-name">Nama Lengkap</h3>

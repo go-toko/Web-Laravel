@@ -9,21 +9,17 @@ use App\Models\User;
 use App\Models\UserCashierModel;
 use App\Models\UserProfileModel;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Str;
-use Intervention\Image\Facades\Image;
 
 class CashierController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\View
      */
     public function index()
     {
@@ -42,7 +38,7 @@ class CashierController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\View
      */
     public function create()
     {
@@ -56,13 +52,13 @@ class CashierController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(CashierValidate $request)
     {
         try {
             DB::beginTransaction();
-            $user =  User::create([
+            $user = User::create([
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'role_id' => 3
@@ -84,9 +80,7 @@ class CashierController extends Controller
             DB::commit();
             return redirect(route('owner.orang.kasir.index'))->with(['type' => 'success', 'success' => 'Berhasil menambahkan kasir']);
         } catch (\Throwable $e) {
-            # code...
             DB::rollBack();
-            dd($e);
             return back()->with(['type' => 'error', 'error' => 'Gagal menambahkan kasir']);
         }
     }
@@ -138,7 +132,8 @@ class CashierController extends Controller
     {
         $cashier = $this->cashierById($id);
         try {
-            if (!$cashier) return response()->json(['msg' => 'Akun kasir tidak ditemukan. Silahkan coba lagi !']);
+            if (!$cashier)
+                return response()->json(['msg' => 'Akun kasir tidak ditemukan. Silahkan coba lagi !']);
             $cashier->update(['isActive' => false]);
 
             return response()->json(['msg' => 'Berhasil menghapus akun kasir']);

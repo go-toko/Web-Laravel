@@ -22,7 +22,7 @@ class ProductsController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\View
      */
     public function index(Request $request)
     {
@@ -47,7 +47,7 @@ class ProductsController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\View
      */
     public function create()
     {
@@ -60,21 +60,20 @@ class ProductsController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(ProductsValidate $request)
     {
         try {
             if ($request->hasFile('image')) {
                 $filename = 'images/products/' . round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
-                Storage::disk('s3')->put($filename, file_get_contents(public_path('images/products/' . $filename)), ['visibility' => 'public']);
-                $filename = Storage::disk('s3')->url($filename);
+                Storage::disk('s3')->put($filename, file_get_contents($request->file('image')), ['visibility' => 'public']);
             } else {
                 $filename = 'noimage.png';
             }
             $name = $request->name;
-            $request['buying_price'] =  implode('', explode('.', str_replace('Rp', '', $request->buying_price)));
-            $request['selling_price'] =  implode('', explode('.', str_replace('Rp', '', $request->selling_price)));
+            $request['buying_price'] = implode('', explode('.', str_replace('Rp', '', $request->buying_price)));
+            $request['selling_price'] = implode('', explode('.', str_replace('Rp', '', $request->selling_price)));
 
             ProductsModel::create([
                 'category_id' => $request->category,
@@ -90,28 +89,17 @@ class ProductsController extends Controller
                 'images' => $filename,
             ]);
         } catch (\Throwable $th) {
-            //throw $th;
-            return back()->with(['type' => 'error', 'error' => 'Something wrong']);
+            return back()->with(['type' => 'error', 'error' => 'Gagal menambah produk, silahkan coba lagi']);
         }
         return redirect(route('owner.produk.daftar-produk.index'))->with(['type' => 'success', 'success' => 'Berhasil menambah produk']);
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
 
     /**
      * Show the form for editing the specified resource.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\View
      */
     public function edit($id)
     {
@@ -130,7 +118,7 @@ class ProductsController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
 
     public function update(ProductsValidate $request, $id)
@@ -143,6 +131,7 @@ class ProductsController extends Controller
                 if (File::exists(public_path('images/products/' . $productData->images))) {
                     File::delete(public_path('images/products/' . $productData->images));
                 }
+
                 // Store new image
                 $filename = "images/products/" . round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
                 Storage::disk('s3')->put($filename, file_get_contents($request->file('image')), ['visibility' => 'public']);
@@ -151,8 +140,9 @@ class ProductsController extends Controller
                     'images' => $filename
                 ]);
             }
-            $request['buying_price'] =  implode('', explode('.', str_replace('Rp', '', $request->buying_price)));
-            $request['selling_price'] =  implode('', explode('.', str_replace('Rp', '', $request->selling_price)));
+
+            $request['buying_price'] = implode('', explode('.', str_replace('Rp', '', $request->buying_price)));
+            $request['selling_price'] = implode('', explode('.', str_replace('Rp', '', $request->selling_price)));
 
             $productData->update([
                 'category' => $request->category,
@@ -181,7 +171,8 @@ class ProductsController extends Controller
     {
         try {
             $data = $this->getProductsById(Crypt::decrypt($id))->first();
-            if (!$data) return response()->json(["msg" => "Something went wrong. Please try again"]);
+            if (!$data)
+                return response()->json(["msg" => "Something went wrong. Please try again"]);
 
             if ($data->images != 'noimages.png') {
                 File::delete(public_path('images/products/' . $data->images));
@@ -198,14 +189,14 @@ class ProductsController extends Controller
     public function checkSKU(Request $request)
     {
         $counter = 0;
-        $padLength = 10 - strlen((string)$counter);
+        $padLength = 10 - strlen((string) $counter);
         $nameSku = str_pad($request->sku, $padLength, "0", STR_PAD_RIGHT);
-        $newName = $nameSku . (string)$counter;
+        $newName = $nameSku . (string) $counter;
         while (ProductsModel::where('sku', $newName)->exists()) {
             $counter++;
-            $padLength = 10 - strlen((string)$counter);
+            $padLength = 10 - strlen((string) $counter);
             $nameSku = str_pad($request->sku, $padLength, "0", STR_PAD_RIGHT);
-            $newName = $nameSku . (string)$counter;
+            $newName = $nameSku . (string) $counter;
         }
         return $newName;
     }
@@ -236,13 +227,15 @@ class ProductsController extends Controller
         if ($request->query('category')) {
             $category = ProductsCategoryModel::where(['code' => $request->query('category')])->first();
             $products = $request->query('category') == 'all' ? $products : $products->map(function ($item) use ($category) {
-                if ($item->category_id == $category->id) return $item;
+                if ($item->category_id == $category->id)
+                    return $item;
             })->filter();
         }
         if ($request->query('brand')) {
             $brandId = $request->query('brand');
             $products = $request->query('brand') == 'all' ? $products : $products->map(function ($item) use ($brandId) {
-                if ($item->brand_id == $brandId) return $item;
+                if ($item->brand_id == $brandId)
+                    return $item;
             })->filter();
         }
         return $products;

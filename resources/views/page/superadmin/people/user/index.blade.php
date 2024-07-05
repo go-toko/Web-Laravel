@@ -73,10 +73,11 @@
                                                 <td>
                                                     <div class="avatar">
                                                         <img class="avatar-img rounded-circle" alt="User Image"
-                                                            src="{{ isset($item->userProfile->picture) ? $item->userProfile->picture : asset('category/images/noimage.png') }}">
+                                                            src="{{ filter_var($item->userProfile->picture, FILTER_VALIDATE_URL) ? $item->userProfile->picture : URL::asset('assets/img/profiles/avatar-01.jpg') }}">
                                                     </div>
                                                 </td>
-                                                <td>{{ $item->userProfile ? $item->userProfile->first_name . ' ' . $item->userProfile->last_name : $item->userCashierProfile->name }}
+                                                <td>{{ $item->userProfile->first_name ?? 'User' }}
+                                                    {{ $item->userProfile->last_name ?? '' }}
                                                     @if ($item->isSubscribe === 1)
                                                         <i class="fas fa-crown"></i>
                                                     @endif

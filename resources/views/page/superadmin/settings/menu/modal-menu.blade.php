@@ -257,6 +257,9 @@
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                         },
                         type: 'POST',
+                        data: {
+                            'role_id': $(this).data('role_id'),
+                        },
                         success: function(data) {
                             Swal.fire({
                                 title: 'Deleted!',

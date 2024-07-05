@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class RoleMiddleware
 {
@@ -21,6 +22,17 @@ class RoleMiddleware
                 return $next($request);
             }
         }
-        return redirect('login');
+
+        $role = Auth::user()->role->name;
+        switch ($role) {
+            case 'Superadmin':
+                return redirect(route('superadmin.dashboard'));
+            case 'Owner':
+                return redirect(route('owner.dashboard'));
+            case 'Cashier':
+                return redirect(route('cashier.dashboard'));
+            default:
+                return redirect(route('login'));
+        }
     }
 }

@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Superadmin\Settings;
 use App\Http\Controllers\Controller;
 use App\Models\MenuModel;
 use App\Models\RoleMenuModel;
-use App\Models\RolesModel;use Dompdf\Dompdf;
+use App\Models\RolesModel;
+use Dompdf\Dompdf;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -20,17 +22,21 @@ class MenuController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\View
      */
     public function index()
     {
+
+        $data = RolesModel::with([
+            'roleMenu' => function ($query) {
+                $query->orderBy('order', 'ASC');
+            },
+            'roleMenu.menu.subMenu',
+        ])->get();
+
+
         return view('page.superadmin.settings.menu.index', [
-            'roles' => RolesModel::with([
-                'roleMenu' => function ($query) {
-                    $query->orderBy('order', 'ASC');
-                },
-                'roleMenu.menu.subMenu',
-            ])->get(),
+            'roles' => $data,
         ]);
     }
 
@@ -72,6 +78,8 @@ class MenuController extends Controller
             Log::error('Error when store data to databases in menus management, the error is : \n' . $exception);
             return response()->json(['status' => 0, 'msg' => $exception]);
         }
+
+        Cache::forget('menus' . $request->role_id);
 
         Log::alert('Menu has been created from user ' . Auth::user()->name . ' with menus name ' . $data['name']);
         return response()->json(['status' => 1, 'msg' => 'Success create the menu']);
@@ -117,6 +125,8 @@ class MenuController extends Controller
             return response()->json(['status' => 0, 'msg' => $exception]);
         }
 
+        Cache::forget('menus' . $request->role_id);
+
         Log::alert('Menu has been updated from user ' . Auth::user()->name . ' with menus name ' . $data['name']);
         return response()->json(['status' => 1, 'msg' => 'Success update the menu']);
     }
@@ -127,6 +137,9 @@ class MenuController extends Controller
 
         try {
             DB::beginTransaction();
+
+            $role = RoleMenuModel::where('id', $order[0])->first();
+            Cache::forget('menus' . $role->role_id);
 
             foreach ($order as $index => $itemId) {
                 RoleMenuModel::where('id', $itemId)->update(['order' => $index + 1]);
@@ -145,17 +158,31 @@ class MenuController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
-            $data = MenuModel::findOrFail($id);
-            Log::alert('Menu has been deleted from user ' . Auth::user()->name . ' with menus name' . $data->name);
+            $data = RoleMenuModel::with('menu')->where(['role_id' => $request->role_id, 'menu_id' => $id])->first();
+
+            if ($data == null) {
+                return response()->json(['status' => 'error']);
+            }
+
             $data->delete();
+            Cache::forget('menus' . $request->role_id);
+
+            $role = RoleMenuModel::where('menu_id', $id)->count();
+            if ($role == 0) {
+                MenuModel::where('id', $id)->delete();
+            }
+
+            Log::alert('Menu has been deleted from user ' . Auth::user()->name . ' with menus name' . $data->name);
             return response()->json(['status' => 'success']);
         } catch (\Throwable $th) {
+
+            dd($th->getMessage());
             Log::error('Error when deleting data from menus management, the error is : \n' . $th->getMessage());
             return response()->json(['status' => 'error']);
         }

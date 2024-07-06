@@ -27,7 +27,7 @@
                         <h4>Silahkan isi data diri anda</h4>
                     </div>
                     <div class="form-login">
-                        <label>Nama</label>
+                        <label>Name</label>
                         <div class="form-addons">
                             <input type="text" name="name" id="name" placeholder="John Doe" value="">
                         </div>
@@ -35,7 +35,7 @@
                             @error('0')
                                 {{ $message }}
                             @enderror
-                            @error('email')
+                            @error('name')
                                 {{ $message }}
                             @enderror
                         </div>

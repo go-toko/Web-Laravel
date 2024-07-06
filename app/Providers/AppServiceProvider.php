@@ -37,14 +37,14 @@ class AppServiceProvider extends ServiceProvider
             if (Auth::check()) {
                 $roleId = Auth::user()->role_id;
 
-                $menu = Cache::get('menus', function () use ($roleId) {
+                $menu = Cache::get('menus' . $roleId, function () use ($roleId) {
                     $data = RoleMenuModel::where('role_id', $roleId)->with([
                         'menu.subMenu' => function ($query) {
                             $query->where('status', 1);
                         }
                     ])->orderBy('menu_id', 'asc')->get();
 
-                    Cache::put('menus', $data, 60 * 60 * 24);
+                    Cache::put('menus' . $roleId, $data, 60 * 60 * 24);
                     return $data;
                 });
 

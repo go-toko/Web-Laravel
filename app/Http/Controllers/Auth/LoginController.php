@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\UserCashierModel;
 use App\Models\UserProfileModel;
 use App\Models\UserSubscriptionModel;
 use Carbon\Carbon;
@@ -161,7 +160,6 @@ class LoginController extends Controller
     {
         Auth::logout();
         Session::forget('active');
-        Cache::forget('menus');
         return redirect(route('login'));
     }
 }

@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\General\MyProfileController;
 use App\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
@@ -17,9 +17,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', [LoginController::class, 'index'])->middleware('web')->name('login');
-Route::post('/login', [LoginController::class, 'login'])->middleware('web')->name('login.post');
-Route::get('/login/google', [LoginController::class, 'redirectGoogle'])->middleware('web')->name('login.google');
+Route::get('/', [LoginController::class, 'index'])->middleware('guest')->name('login');
+Route::post('/login', [LoginController::class, 'login'])->middleware('guest')->name('login.post');
+Route::get('/register', [RegisterController::class, 'index'])->middleware('guest')->name('register');
+Route::post('/register', [RegisterController::class, 'register'])->middleware('guest')->name('register.post');
+Route::get('/login/google', [LoginController::class, 'redirectGoogle'])->middleware('guest')->name('login.google');
 Route::get('/login/google/callback', [LoginController::class, 'handleGoogleCallback'])->name('login.google.callback');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 

@@ -25,6 +25,10 @@ Route::get('/login/google', [LoginController::class, 'redirectGoogle'])->middlew
 Route::get('/login/google/callback', [LoginController::class, 'handleGoogleCallback'])->name('login.google.callback');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+Route::get('/privacy-policy', function () {
+    return view('page.guest.privacy-policy');
+})->name('policy');
+
 Route::group(['prefix' => 'my-profile', 'as' => 'my-profile.', 'middleware' => ['auth']], function () {
     Route::get('', [MyProfileController::class, 'index'])->name('index');
     Route::post('{id}/update', [MyProfileController::class, 'update'])->name('update');

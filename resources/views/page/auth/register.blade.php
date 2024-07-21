@@ -73,8 +73,14 @@
                         </div>
                     </div>
 
+                    <!-- Kebijakan Privasi -->
                     <div class="form-login">
-                        <button class="btn btn-login" type="submit">Masuk</button>
+                        <label for="policy">Dengan mendaftar, saya menyetujui <a href="{{ url('privacy-policy') }}"
+                                class="hover-a">Kebijakan Privasi</a> GoToko.ID</label>
+                    </div>
+
+                    <div class="form-login">
+                        <button class="btn btn-login" type="submit">Daftar</button>
                     </div>
                 </form>
                 <div class="signinform text-center">

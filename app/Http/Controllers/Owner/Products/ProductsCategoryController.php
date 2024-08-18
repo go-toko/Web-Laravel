@@ -2,21 +2,32 @@
 
 namespace App\Http\Controllers\Owner\Products;
 
+use App\Exceptions\CustomException;
 use App\Exports\OwnerReportExport;
 use App\Models\ProductsCategoryModel;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Owner\CategoryValidate;
+use App\Models\ProductsModel;
 use Dompdf\Dompdf;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ProductsCategoryController extends Controller
 {
+    private function getCategory()
+    {
+        $categories = ProductsCategoryModel::where(['user_id' => Auth::user()->id, 'isParent' => true])->get()->sortByDesc('isParent')->sortByDesc('isActive');
+        if (Session::has('active')) {
+            $id = Crypt::decrypt(Session::get('active'));
+            $categoriesShop = ProductsCategoryModel::where(['user_id' => Auth::user()->id, 'shop_id' => $id])->get()->sortByDesc('isParent')->sortByDesc('isActive');
+            $categories = $categories->merge($categoriesShop);
+        }
+        return $categories;
+    }
     /**
      * Display a listing of the resource.
      *
@@ -48,27 +59,33 @@ class ProductsCategoryController extends Controller
      */
     public function store(CategoryValidate $request)
     {
+        $nameCategory = trim(strtolower($request->name));
+        $category = DB::table('products_category')->whereRaw("LOWER(name) = ?", [$nameCategory])->first();
         try {
+            if ($category) {
+                throw new CustomException('Kategori sudah ada');
+            }
             if (Session::has('active')) {
                 $idShop = Crypt::decrypt(Session::get('active'));
                 ProductsCategoryModel::create([
                     'user_id' => Auth::user()->id,
                     'shop_id' => $idShop,
                     'name' => $request->name,
-                    'code' => $request->code,
                     'description' => $request->description,
                 ]);
             } else {
                 ProductsCategoryModel::create([
                     'user_id' => Auth::user()->id,
                     'name' => $request->name,
-                    'code' => $request->code,
                     'description' => $request->description,
                     'isParent' => true,
                 ]);
             }
         } catch (\Throwable $th) {
-            return back()->with(['type' => 'error', 'error' => 'Something wrong']);
+            if ($th instanceof CustomException) {
+                $message = $th->getMessage();
+            }
+            return back()->with(['type' => 'error', 'error' => $message ?? 'Ada sesuatu yang salah']);
         }
         return redirect(route('owner.produk.kategori.index'))->with(['success' => "Success saving data ✅", 'type' => 'success']);
     }
@@ -97,28 +114,23 @@ class ProductsCategoryController extends Controller
      */
     public function update(CategoryValidate $request, $id)
     {
+        $nameCategory = trim(strtolower($request->name));
+        $category = DB::table('products_category')->whereRaw("LOWER(name) = ?", [$nameCategory])->first();
         try {
+            if ($category) {
+                throw new CustomException("Kategori dengan nama $request->name sudah ada");
+            }
             $id = Crypt::decrypt($id);
             $data = ProductsCategoryModel::findOrFail($id);
-            if ($request->images != null && Storage::disk('s3')->exists('images/category/' . $data->images)) {
-                // Delete old images if exists 
-                Storage::disk('s3')->delete('images/category/' . $data->images);
-
-                // Upload new images
-                $filename = round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
-                Storage::disk('s3')->put('images/category/' . $filename, file_get_contents($request->file('image')), ['visibility' => 'public']);
-            } elseif ($request->images == null) {
-                $filename = $data->images;
-            }
-
             $data->update([
                 'name' => $request->name,
-                'code' => $request->code,
                 'description' => $request->description,
-                'images' => $filename,
             ]);
         } catch (\Throwable $th) {
-            return back()->with(['error' => 'Error when submit to system'], ['type' => 'error']);
+            if ($th instanceof CustomException) {
+                $message = $th->getMessage();
+            }
+            return back()->with(['error' => $message ?? 'Gagal mengubah kategori'], ['type' => 'error']);
         }
         return redirect(route('owner.produk.kategori.index'))->with(['success' => 'Success saving data 😎', 'type' => 'success']);
     }
@@ -129,14 +141,11 @@ class ProductsCategoryController extends Controller
      * @param  \App\Models\ProductsCategoryModel  $productsCategoryModel
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function nonaktif($id)
     {
         try {
             $id = Crypt::decrypt($id);
             $data = ProductsCategoryModel::findOrFail($id);
-            if ($data->images && $data->images !== 'noimage.png' && Storage::disk('s3')->exists('images/category/' . $data->images)) {
-                Storage::disk('s3')->delete('images/category/' . $data->images);
-            }
             $data->update([
                 'isActive' => false
             ]);
@@ -145,6 +154,39 @@ class ProductsCategoryController extends Controller
             return response()->json(['status' => 'error']);
         }
     }
+
+    public function restore($id)
+    {
+        $id = Crypt::decrypt($id);
+        try {
+            ProductsCategoryModel::where(['id' => $id])->update([
+                'isActive' => true,
+            ]);
+            return response()->json(['status' => 'success']);
+        } catch (\Throwable $th) {
+            return response()->json(['status' => 'error']);;
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $products = ProductsModel::where(['category_id' => Crypt::decrypt($id)])->get();
+            $jmlProducts = $products->count();
+            if ($jmlProducts > 0) throw new CustomException('Gagal menghapus. Kategori sudah digunakan');
+
+            $id = Crypt::decrypt($id);
+            $data = ProductsCategoryModel::findOrFail($id);
+            $data->delete();
+            return response()->json(['type' => 'success', 'title' => 'Berhasil!!', 'msg' => 'Berhasil menghapus kategori']);
+        } catch (\Throwable $th) {
+            if ($th instanceof CustomException) {
+                $message = $th->getMessage();
+            }
+            return response()->json(['title' => 'Gagal!!', 'type' => 'error', 'msg' => $message ?? 'Ada sesuatu yang salah. Coba lagi!!']);
+        }
+    }
+
 
     public function reportPdf()
     {
@@ -172,16 +214,5 @@ class ProductsCategoryController extends Controller
         $view = view('page.owner.products-category.report-excel', ['categories' => $categories]);
 
         return Excel::download(new OwnerReportExport($view), time() . '-laporan-ketegori-produk.xlsx');
-    }
-
-    private function getCategory()
-    {
-        $categories = ProductsCategoryModel::where(['user_id' => Auth::user()->id, 'isActive' => true, 'isParent' => true])->get();
-        if (Session::has('active')) {
-            $id = Crypt::decrypt(Session::get('active'));
-            $categoriesShop = ProductsCategoryModel::where(['user_id' => Auth::user()->id, 'isActive' => true, 'shop_id' => $id])->get();
-            $categories = $categories->merge($categoriesShop);
-        }
-        return $categories;
     }
 }

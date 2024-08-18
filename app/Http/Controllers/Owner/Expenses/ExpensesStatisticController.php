@@ -23,7 +23,10 @@ class ExpensesStatisticController extends Controller
     public function index()
     {
         $shops = ShopModel::where(['user_id' => Auth::user()->id, 'isActive' => true])->select('name', 'id')->get();
-        $latest_shop_id = ShopModel::where('user_id', Auth::user()->id)->latest()->first()->id;
+        $latest_shop_id = ShopModel::where(['user_id' => Auth::user()->id, 'isActive' => true])->get()->sortByDesc('created_at')->first()->id;
+        if (Session::has('active')) {
+            $latest_shop_id = Crypt::decrypt(Session::get('active'));
+        }
         return view('page.owner.expenses-statistic.index', [
             'shops' => $shops,
             'latest_shop_id' => $latest_shop_id,
@@ -39,7 +42,7 @@ class ExpensesStatisticController extends Controller
     public function getExpenses(Request $request)
     {
         // init Param
-        $shop_id = $request->query('shop_id') ?? ShopModel::where('user_id', Auth::user()->id)->latest()->first()->id;
+        $shop_id = $request->query('shop_id') ?? ShopModel::where(['user_id' => Auth::user()->id, 'isActive' => true])->get()->sortByDesc('created_at')->first()->id;
         $year = $request->query('year') ?? Carbon::now()->year;
 
         $expenses = ExpensesModel::where(['shop_id' => $shop_id])->whereYear('date', $year);

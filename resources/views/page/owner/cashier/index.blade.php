@@ -39,9 +39,9 @@
                                     <tr>
                                         <th class="col-0">Foto</th>
                                         <th class="col-2">Nama</th>
-                                        <th class="col-1">Jenis Kelamin</th>
+                                        <th class="col-1">ID Karyawan</th>
+                                        <th class="col-2">Jenis Kelamin</th>
                                         <th class="col-2">Tanggal Lahir</th>
-                                        <th class="col-2">Toko</th>
                                         <th class="col-4">Alamat</th>
                                         <th class="col-1">Aksi</th>
                                     </tr>
@@ -58,6 +58,7 @@
                                             </td>
                                             <td>{{ $cashier->user->userProfile->first_name . ' ' . $cashier->user->userProfile->last_name }}
                                             </td>
+                                            <td>{{ 'CSH-' . $cashier->user->id }}</td>
                                             <td>
                                                 @if ($cashier->user->userProfile->gender == 'male')
                                                     Laki-laki
@@ -67,34 +68,14 @@
                                             </td>
                                             <td>{{ $cashier->user->userProfile->birthdate ? Carbon\Carbon::createFromFormat('Y-m-d', $cashier->user->userProfile->birthdate)->translatedFormat('d F Y') : 'Belum di isi' }}
                                             </td>
-                                            <td>
-                                                <select class="form-control select cashierShop"
-                                                    data-url="{{ route('owner.orang.kasir.update', ['id' => Crypt::encrypt($cashier->id)]) }}">
-                                                    @foreach ($shops as $shop)
-                                                        <option value="{{ $shop->id }}"
-                                                            @if ($shop->id == $cashier->shop_id) selected @endif>
-                                                            {{ $shop->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </td>
                                             <td>{{ $cashier->user->userProfile->address ?? 'Belum di isi' }}</td>
-                                            <td class="form-group d-flex align-center m-0">
-                                                <a class="me-1 btn btn-filters detail-cashier" data-bs-toggle="modal"
+                                            <td class="d-flex align-center m-0">
+                                                <a class="btn btn-filters detail-cashier" data-bs-toggle="modal"
                                                     title="Detail" data-bs-target="#exampleModal"
-                                                    data-url="{{ route('owner.orang.kasir.getCashierByEmail', ['email' => $cashier->user->email]) }}">
+                                                    data-url="{{ route('owner.orang.kasir.getCashierByEmail', ['email' => $cashier->user->email]) }}"
+                                                    data-cashier-id="{{ $cashier->user->id }}">
                                                     <i class="fa fa-eye"></i>
                                                 </a>
-                                                @if ($cashier->isActive)
-                                                    <a class="me-1 btn btn-filters" id="confirm-delete" title="Nonaktifkan"
-                                                        data-action="{{ route('owner.orang.kasir.delete', ['id' => Crypt::encrypt($cashier->id)]) }}">
-                                                        <i class="fa fa-trash"></i>
-                                                    </a>
-                                                @else
-                                                    <a class="me-1 btn btn-filters" id="restore-cashier" title="Aktifkan"
-                                                        data-action="{{ route('owner.orang.kasir.restore', ['id' => Crypt::encrypt($cashier->id)]) }}">
-                                                        <i class="fa fa-undo"></i>
-                                                    </a>
-                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach
@@ -119,7 +100,7 @@
                         <div class="col-4 offset-xl-1 col-xl-3 text-center">
                             <img id="cashier-photo-profile" class="rounded-circle"
                                 style="height: 100px; width: 100px; object-fit: cover; object-position: center center"
-                                src="{{ env('AWS_ENDPOINT_BUCKET') }}/noimage.png" alt="Foto Profil">
+                                src="{{ URL::asset('images/default-profile.png') }}" alt="">
                         </div>
                         <div class="col-8 col-xl-7">
                             <h3 id="cashier-name">Nama Lengkap</h3>
@@ -151,12 +132,6 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-4 col-sm-4 col-md-4 offset-xl-1 col-xl-3"><strong>Toko</strong></div>
-                        <div class="col-8 col-sm-8 col-md-8 col-xl-7">
-                            <p id="cashier-shop">Nama Toko</p>
-                        </div>
-                    </div>
-                    <div class="row">
                         <div class="col-4 col-sm-4 col-md-4 offset-xl-1 col-xl-3"><strong>Tanggal dibuat akun</strong>
                         </div>
                         <div class="col-8 col-sm-8 col-md-8 col-xl-7">
@@ -169,6 +144,24 @@
                             <p id="cashier-address">Detail Lengkap Alamat Lorem ipsum, dolor sit amet consectetur
                                 adipisicing elit. Recusandae
                                 fuga vel esse, incidunt molestiae vitae.</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-4 col-sm-4 col-md-4 offset-xl-1 col-xl-3"><strong>Hak Akses Toko</strong></div>
+                        <div class="col-8 col-sm-8 col-md-8 col-xl-7" id="hakAksesToko">
+                            @foreach ($shops as $shop)
+                                <div class="row">
+                                    <div class="col-5">
+                                        <p>{{ $shop->name }}</p>
+                                    </div>
+                                    <div class="col-7">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input checked-shop" type="checkbox" role="switch"
+                                                data-shop-id="{{ $shop->id }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
                 </div>
@@ -298,9 +291,10 @@ $msg = Session::get($type);
         const cashierGender = $('#cashier-gender');
         const cashierPhone = $('#cashier-phone');
         const cashierBirthDate = $('#cashier-birthDate');
-        const cashierShop = $('#cashier-shop');
         const cashierCreated = $('#cashier-created');
         const cashierAddress = $('#cashier-address');
+        const hakAksesCashier = $('.checked-shop')
+        let cashierId = null;
 
         const resetDetail = function() {
             cashierPhotoProfil.attr('src', `{{ URL::asset('images/default-profile.png') }}`)
@@ -311,7 +305,6 @@ $msg = Session::get($type);
             cashierGender.text('')
             cashierPhone.text('')
             cashierBirthDate.text('')
-            cashierShop.text('')
             cashierCreated.text('')
             cashierAddress.text('')
         }
@@ -330,14 +323,25 @@ $msg = Session::get($type);
             cashierBirthDate.text(
                 `${birthDate ? birthDate.toLocaleString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}) : 'Belum di isi'}`
             );
-            cashierShop.text(`${user.user_cashier.shop.name}`);
 
             cashierCreated.text(`${createdAt.toLocaleString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}`)
             cashierAddress.text(`${user.user_profile.address ? user.user_profile.address : 'Belum di isi'}`)
+
+            hakAksesCashier.each(function() {
+                const tokoYgBisaDiakses = user.user_cashier.map((userCashier) => userCashier.isActive ? userCashier
+                    .shop_id : undefined).filter((shop) => shop != undefined)
+                const shopId = $(this).data('shopId')
+                if (tokoYgBisaDiakses.includes(shopId)) {
+                    $(this).prop('checked', true)
+                } else {
+                    $(this).prop('checked', false)
+                }
+            })
         }
 
         $(document).on('click', '.detail-cashier', function(e) {
             const url = $(this).data('url')
+            cashierId = $(this).data('cashierId')
             $.ajax({
                 url,
                 headers: {
@@ -349,27 +353,26 @@ $msg = Session::get($type);
                 }
             })
         })
-    </script>
 
-    <script>
-        $(document).on('change', '.cashierShop', function(event) {
-            event.preventDefault();
-            const url = $(this).data('url');
-            const shopId = $(this).val();
+        $(document).on('click', '.checked-shop', function() {
+            const value = $(this).is(':checked');
+            const shopId = $(this).data('shopId');
             $.ajax({
-                url,
+                url: `{{ route('owner.orang.kasir.updateOrDeleteAkses') }}`,
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 data: {
-                    shop_id: shopId
+                    value,
+                    shopId,
+                    cashierId
                 },
                 type: 'PUT',
                 success: function(data) {
-                    toastr.success(data.msg, data.title)
+                    toastr.success(data.msg, data.title);
                 },
-                error: function(error) {
-                    toastr.error(error.msg, error.title)
+                error: function(data) {
+                    toastr.error(data.msg, data.title);
                 }
             })
         })

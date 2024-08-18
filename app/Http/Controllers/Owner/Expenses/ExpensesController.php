@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -31,6 +32,7 @@ class ExpensesController extends Controller
         $expenses = $this->getDataByFilter($request);
         return view('page.owner.expenses.index', [
             'expenses' => $expenses->sortByDesc('date'),
+            'status' => ExpensesModel::status,
         ]);
     }
 
@@ -56,6 +58,12 @@ class ExpensesController extends Controller
     public function store(ExpensesValidate $request)
     {
         try {
+            if ($request->hasFile('image')) {
+                $filename = round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
+                $request->file('image')->move(public_path('images/nota'), $filename);
+            } else {
+                $filename = 'noimage.png';
+            }
             // DONE: Conver format Rp. to number only
             // DONE: implement store balance reduction
             $idShop = Crypt::decrypt(Session::get('active'));
@@ -80,6 +88,7 @@ class ExpensesController extends Controller
                 'description' => $request->description,
                 'date' => Carbon::createFromFormat('d-m-Y', $request->date),
                 'amount' => $request->amount,
+                'image_nota' => $filename,
             ]);
             DB::commit();
         } catch (\Throwable $e) {
@@ -100,7 +109,12 @@ class ExpensesController extends Controller
      */
     public function show($id)
     {
-        //
+        $expense = $this->getExpenseById($id);
+        $statusValue = ExpensesModel::status;
+        return view('page.owner.expenses.show', [
+            'expense' => $expense,
+            'status' => $statusValue
+        ]);
     }
 
     /**
@@ -126,7 +140,7 @@ class ExpensesController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(ExpensesValidate $request, $id)
     {
         try {
             // DONE: implement store balance adjustment 
@@ -142,6 +156,18 @@ class ExpensesController extends Controller
             // }
 
             DB::beginTransaction();
+
+            if ($request->hasFile('image')) {
+                // Deleting old image
+                if (File::exists(public_path('images/nota/' . $expense->image_nota))) {
+                    File::delete(public_path('images/nota/' . $expense->image_nota));
+                }
+                $filename = round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
+                $request->file('image')->move(public_path('images/nota'), $filename);
+                $expense->update([
+                    'image_nota' => $filename
+                ]);
+            }
             // $shop->update([
             //     'balance' => $shop->balance + $expense->amount - $request->amount,
             // ]);
@@ -197,7 +223,7 @@ class ExpensesController extends Controller
 
     private function getExpenseById($id)
     {
-        return ExpensesModel::findOrFail(Crypt::decrypt($id));
+        return ExpensesModel::with(['category', 'shop'])->findOrFail(Crypt::decrypt($id));
     }
 
     private function getShopActive()
@@ -248,5 +274,25 @@ class ExpensesController extends Controller
             'expenses' => $expenses->sortByDesc('date')
         ]);
         return Excel::download(new OwnerReportExport($view), time() . '-laporan-pengeluaran.xlsx');
+    }
+
+    public function updateStatus(ExpensesValidate $request, $id)
+    {
+        $expense = $this->getExpenseById($id);
+        try {
+            DB::beginTransaction();
+            $expense->update([
+                'status' => $request->status
+            ]);
+            DB::commit();
+            $message = 'Berhasil menyelesaikan pengeluaran.';
+            if ($request->status == 'BATAL') {
+                $message = 'Berhasil membatalkan pengeluaran.';
+            }
+            return response()->json(['title' => 'Berhasil!!', 'type' => 'success', 'msg' => $message]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['title' => 'Gagal!!', 'type' => 'error', 'msg' => 'Ada sesuatu yang salah. Coba lagi!!']);
+        }
     }
 }

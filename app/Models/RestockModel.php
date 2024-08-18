@@ -11,6 +11,8 @@ class RestockModel extends Model
     protected $table = 'restock';
     protected $guarded = ['id'];
 
+    public const status = ['PROSES', 'SIAP DITAMBAHKAN', 'SELESAI', 'BATAL'];
+
     public function detail()
     {
         return $this->hasMany(RestockDetailModel::class, foreignKey: 'restock_id');

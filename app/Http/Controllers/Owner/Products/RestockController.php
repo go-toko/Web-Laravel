@@ -30,7 +30,8 @@ class RestockController extends Controller
         $idShop = Crypt::decrypt(Session::get('active'));
         $restock = RestockModel::with(['detail', 'supplier', 'shop'])->where(['shop_id' => $idShop])->get();
         return view('page.owner.restock.index', [
-            'restock' => $restock
+            'restock' => $restock,
+            'status' => RestockModel::status,
         ]);
     }
 
@@ -85,18 +86,13 @@ class RestockController extends Controller
             foreach ($request->product as $key => $value) {
                 $price_buy = $this->formatRupiahToNumber($request->price_buy[$key]);
                 $price_sell = $this->formatRupiahToNumber($request->price_sell[$key]);
-                $restock_detail = RestockDetailModel::create([
+                RestockDetailModel::create([
                     'restock_id' => $restock->id,
                     'product_id' => $value,
                     'price_buy' => (int)$price_buy,
                     'quantity' => (int)$request->quantity[$key],
-                    'total' => (int)$price_buy * (int)$request->quantity[$key]
-                ]);
-                $product = ProductsModel::where(['id' => $value])->first();
-                $product->update([
-                    'price_buy' => (int)$price_buy,
-                    'quantity' => (int)$product->quantity + (int)$request->quantity[$key],
                     'price_sell' => (int)$price_sell,
+                    'total' => (int)$price_buy * (int)$request->quantity[$key]
                 ]);
             }
 
@@ -106,13 +102,13 @@ class RestockController extends Controller
             // ]);
 
             DB::commit();
-            return redirect(route('owner.produk.restock.index'))->with(['type' => 'success', 'success' => 'Berhasil menambah produk']);
+            return redirect(route('owner.produk.restock.index'))->with(['type' => 'success', 'success' => 'Berhasil menambah restock produk']);
         } catch (\Throwable $e) {
             DB::rollBack();
             if ($e instanceof CustomException) {
                 $message = $e->getMessage();
             }
-            return redirect(route('owner.produk.restock.index'))->with(['type' => 'error', 'error' => $message ?? 'Gagal menambah produk']);
+            return redirect(route('owner.produk.restock.index'))->with(['type' => 'error', 'error' => $message ?? 'Gagal menambah restock produk']);
         }
     }
 
@@ -127,7 +123,8 @@ class RestockController extends Controller
         $id = Crypt::decrypt($id);
         $restock = RestockModel::with('detail.product', 'supplier', 'shop')->where(['id' => $id])->first();
         return view('page.owner.restock.show', [
-            'restock' => $restock
+            'restock' => $restock,
+            'status' => RestockModel::status,
         ]);
     }
 
@@ -182,13 +179,6 @@ class RestockController extends Controller
         try {
             // DONE: menyesuaikan quantity product dan produk yang akan diedit
             DB::beginTransaction();
-            foreach ($restock->detail as $value) {
-                $updateProduct = ProductsModel::where(['id' => $value->product_id])->first();
-                $updateProduct->update([
-                    'quantity' => (int)$updateProduct->quantity - (int)$value->quantity
-                ]);
-                $value->delete();
-            }
             $restock->update([
                 'supplier_id' => $request->supplier,
                 'date' => Carbon::createFromFormat('d-m-Y', $request->date),
@@ -204,13 +194,8 @@ class RestockController extends Controller
                     'product_id' => $value,
                     'price_buy' => $price_buy,
                     'quantity' => $quantity,
+                    'price_sell' => $price_sell,
                     'total' => $price_buy * $quantity
-                ]);
-                $product = ProductsModel::where(['id' => $value])->first();
-                $product->update([
-                    'price_buy' => (int)$price_buy,
-                    'quantity' => (int)$product->quantity + (int)$request->quantity[$key],
-                    'price_sell' => (int)$price_sell,
                 ]);
             }
 
@@ -243,12 +228,6 @@ class RestockController extends Controller
         $restock = RestockModel::with('detail')->where(['id' => $id])->first();
         try {
             DB::beginTransaction();
-            foreach ($restock->detail as $detail) {
-                $product = ProductsModel::where(['id' => $detail->product_id])->first();
-                $product->update([
-                    'quantity' => (int)$product->quantity - (int)$detail->quantity
-                ]);
-            }
             // $shop->update([
             //     'balance' => $shop->balance + $restock->total
             // ]);
@@ -258,6 +237,65 @@ class RestockController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json(['msg' => 'Gagal menghapus restock']);
+        }
+    }
+
+    public function validasiData($id)
+    {
+        $id = Crypt::decrypt($id);
+        try {
+            $restock = RestockModel::with([])->where(['id' => $id])->first();
+            DB::beginTransaction();
+            $restock->update([
+                'status' => 'SIAP DITAMBAHKAN',
+            ]);
+            DB::commit();
+            return response()->json(['title' => 'Berhasil!', 'type' => 'success', 'msg' => 'Berhasil validasi restock']);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['title' => 'Gagal!', 'type' => 'error', 'msg' => 'Gagal validasi restock']);
+        }
+    }
+
+    public function tambahkanStok($id)
+    {
+        $id = Crypt::decrypt($id);
+        $restock = RestockModel::with(['detail.product'])->where(['id' => $id])->first();
+        try {
+            DB::beginTransaction();
+            foreach ($restock->detail as $detail) {
+                $product = ProductsModel::where(['id' => $detail->product->id])->first();
+                $product->update([
+                    'price_buy' => (int)$detail->price_buy,
+                    'quantity' => (int)$product->quantity + (int)$detail->quantity,
+                    'price_sell' => (int)$detail->price_sell,
+                ]);
+            }
+            $restock->update([
+                'status' => 'SELESAI',
+            ]);
+            DB::commit();
+            return response()->json(['title' => 'Berhasil!', 'type' => 'success', 'msg' => 'Berhasil menambahkan stok ke Produk']);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['title' => 'Gagal!', 'type' => 'error', 'msg' => 'Gagal menambahkan stok ke Produk']);
+        }
+    }
+
+    public function batalkan($id)
+    {
+        $id = Crypt::decrypt($id);
+        try {
+            $restock = RestockModel::with([])->where(['id' => $id])->first();
+            DB::beginTransaction();
+            $restock->update([
+                'status' => 'BATAL',
+            ]);
+            DB::commit();
+            return response()->json(['title' => 'Berhasil!', 'type' => 'success', 'msg' => 'Berhasil membatalkan stok']);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['title' => 'Gagal!', 'type' => 'error', 'msg' => 'Gagal membatalkan stok']);
         }
     }
 

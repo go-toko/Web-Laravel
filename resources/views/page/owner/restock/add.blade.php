@@ -45,7 +45,7 @@
                                                 <input id="date" name="date" type="text"
                                                     placeholder="Pilih Tanggal"
                                                     class="datetimepicker form-control @error('date') is-invalid @enderror"
-                                                    value="{{ old('date') ?? (isset($data->date) ? Carbon\Carbon::createFromFormat('Y-m-d', $data->date)->format('d-m-Y') : null) }}"
+                                                    value="{{ old('date') ?? (isset($data->date) ? Carbon\Carbon::createFromFormat('Y-m-d', $data->date)->format('d-m-Y') : Carbon\Carbon::now()->format('d-m-Y')) }}"
                                                     required>
                                                 <div class="addonset">
                                                     <img src="{{ URL::asset('assets/img/icons/calendars.svg') }}"
@@ -138,7 +138,7 @@
                                     </div>
                                     <div class="col-lg-12">
                                         <div class="form-group">
-                                            <label>Deskripsi</label>
+                                            <label class="test">Deskripsi</label>
                                             <textarea id="description" name="description" class="form-control">{{ old('description') ?? ($data->description ?? null) }}</textarea>
                                         </div>
                                     </div>
@@ -209,7 +209,7 @@ $msg = Session::get($type);
         let index = 0;
         $(document).on('click', '#dynamic-add', function() {
             index++
-            $('#dynamicInput').append(` <div class="row item-dynamic">
+            $('#dynamicInput').append(`<div class="row item-dynamic">
                                             <div class="col-lg-3 col-sm-6 col-12">
                                                 <div class="form-group">
                                                     <label>Produk</label>

@@ -103,9 +103,11 @@
                                 <thead>
                                     <tr>
                                         <th class="col-2">Tanggal</th>
-                                        <th class="col-2">Total Tagihan</th>
-                                        <th class="col-2">Total yang dibayar</th>
-                                        <th class="col-2">Kembalian</th>
+                                        <th class="col-1">Total Tagihan</th>
+                                        <th class="col-1">Total Diskon</th>
+                                        <th class="col-1">Tagihan yang harus dibayar</th>
+                                        <th class="col-1">Jumlah Pembayaran</th>
+                                        <th class="col-1">Kembalian</th>
                                         <th class="col-1">Metode Pembayaran</th>
                                         <th class="col-1">Status</th>
                                         <th class="col-2">Kasir</th>
@@ -118,6 +120,8 @@
                                             <td>{{ Carbon\Carbon::create($sale->created_at)->translatedFormat('d F Y H:i:s') }}
                                             </td>
                                             <td>{{ 'Rp' . number_format($sale->total_bill) }}</td>
+                                            <td>{{ 'Rp' . number_format($sale->total_discount) }}</td>
+                                            <td>{{ 'Rp' . number_format($sale->total_bill - $sale->total_discount) }}</td>
                                             <td>{{ 'Rp' . number_format($sale->total_paid) }}</td>
                                             <td>{{ 'Rp' . number_format($sale->changes) }}</td>
                                             <td>{{ $sale->payment_method }}</td>
@@ -137,7 +141,8 @@
                                             <td>
                                                 <a class="me-1"
                                                     href="{{ route('owner.penjualan.penjualan.detail', ['id' => Crypt::encrypt($sale->id)]) }}">
-                                                    <img src="{{ URL::asset('assets/img/icons/eye.svg') }}" alt="eye">
+                                                    <img src="{{ URL::asset('assets/img/icons/eye.svg') }}"
+                                                        alt="eye">
                                                 </a>
                                             </td>
                                         </tr>

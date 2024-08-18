@@ -11,8 +11,15 @@ class ExpensesModel extends Model
     protected $table = 'expenses';
     protected $guarded = ['id'];
 
+    public const status = ['PROSES', 'SELESAI', 'BATAL'];
+
     public function category()
     {
         return $this->belongsTo(ExpensesCategoryModel::class);
+    }
+
+    public function shop()
+    {
+        return $this->belongsTo(ShopModel::class);
     }
 }

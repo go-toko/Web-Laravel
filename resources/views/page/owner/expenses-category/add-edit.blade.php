@@ -71,3 +71,25 @@
     </div>
 
 @endsection
+<?php
+$title = e($__env->yieldContent('title'));
+$type = Session::get('type');
+$msg = Session::get($type);
+// dd($type);
+?>
+
+@section('forscript')
+    {{-- Toast import js --}}
+    <script src="{{ URL::asset('/assets/plugins/toastr/toastr.min.js') }}"></script>
+    <script src="{{ URL::asset('/assets/plugins/toastr/toastr.js') }}"></script>
+
+    @if ($type != null)
+        <script>
+            let type = {!! json_encode($type) !!};
+            let msg = {!! json_encode($msg) !!};
+            const title = {!! json_encode($title) !!};
+            toastr[type](msg, title)
+        </script>
+    @endif
+
+@endsection

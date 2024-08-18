@@ -86,10 +86,12 @@
                                     <table class="table">
                                         <thead>
                                             <tr>
-                                                <th class="col-3">Nama Product</th>
-                                                <th class="col-3 text-end">Jumlah</th>
-                                                <th class="col-3 text-end">Harga Satuan</th>
-                                                <th class="col-3 text-end">Subtotal</th>
+                                                <th class="col-6">Nama Product</th>
+                                                <th class="col-1 text-end">Jumlah</th>
+                                                <th class="col-1 text-end">Harga Satuan</th>
+                                                <th class="col-1 text-end">Diskon Satuan</th>
+                                                <th class="col-1 text-end">Subtotal Diskon</th>
+                                                <th class="col-2 text-end">Subtotal</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -103,8 +105,12 @@
                                                     </td>
                                                     <td class="text-end">{{ 'Rp' . number_format($detail->unit_price) }}
                                                     </td>
+                                                    <td class="text-end">{{ 'Rp' . number_format($detail->discount) }}</td>
                                                     <td class="text-end">
-                                                        {{ 'Rp' . number_format($detail->unit_price * $detail->quantity) }}
+                                                        {{ 'Rp' . number_format($detail->discount * $detail->quantity) }}
+                                                    </td>
+                                                    <td class="text-end">
+                                                        {{ 'Rp' . number_format($detail->unit_price * $detail->quantity - $detail->discount * $detail->quantity) }}
                                                     </td>
                                                 </tr>
                                             @endforeach

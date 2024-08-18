@@ -16,12 +16,11 @@ class UserManagementController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Contracts\View\View
+     * @return \Illuminate\Http\Response
      */
     public function index()
     {
-        $data = User::with('userProfile')->get();
-
+        $data = User::orderBy('last_seen', 'DESC')->get();
         return view('page.superadmin.people.user.index', [
             'data' => $data,
         ]);
@@ -31,7 +30,7 @@ class UserManagementController extends Controller
      * Display the specified resource.
      *
      * @param  int  $id
-     * @return \Illuminate\Contracts\View\View
+     * @return \Illuminate\Http\Response
      */
     public function show(Request $request, $id)
     {

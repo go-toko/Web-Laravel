@@ -13,12 +13,13 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 
 class DashboardController extends Controller
 {
     //
-    public function index()
+    public function index(Request $request)
     {
         $userId = Auth::user()->id;
         $shops = ShopModel::where([['user_id', $userId], ['isActive', true]])->orderBy('created_at', 'desc');
@@ -35,6 +36,17 @@ class DashboardController extends Controller
                 'totalProduct' => $total_product,
                 'totalExpense' => $total_expense
             ]);
+        }
+        if ($request->query('search')) {
+            $queries = $request->query('search');
+            $queries = explode(' ', trim($queries));
+            $queries = array_map(function ($q) {
+                return "name like lower('%$q%')";
+            }, $queries);
+            $queries = join(" OR ", $queries);
+            $shops = DB::table('shops')
+                ->whereRaw("isActive = ? and user_id = ? and ($queries)", [true, $userId])
+                ->orderByRaw('created_at DESC');
         }
         return view('page.owner.index', [
             'shops' => $shops->get()

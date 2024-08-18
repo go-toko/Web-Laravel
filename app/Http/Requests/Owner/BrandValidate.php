@@ -25,7 +25,6 @@ class BrandValidate extends FormRequest
     {
         return [
             'name' => 'required',
-            'image' => 'file|image|max:8192'
         ];
     }
 }

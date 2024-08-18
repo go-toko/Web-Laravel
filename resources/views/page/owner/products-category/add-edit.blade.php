@@ -49,20 +49,6 @@
                                             @enderror
                                         </div>
                                     </div>
-                                    <div class="col-lg-6 col-sm-6 col-12">
-                                        <div class="form-group">
-                                            <label>Kode Kategori</label>
-                                            <input id="code" name="code" type="text"
-                                                class="form-control @error('code')
-                                                is-invalid
-                                            @enderror"
-                                                value="{{ old('code') ?? ($data->code ?? null) }}">
-                                            @error('code')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
-
                                     <div class="col-lg-12">
                                         <div class="form-group">
                                             <label>Deskripsi</label>
@@ -82,5 +68,28 @@
             </div>
         </div>
     </div>
+
+@endsection
+
+<?php
+$title = e($__env->yieldContent('title'));
+$type = Session::get('type');
+$msg = Session::get($type);
+// dd($type);
+?>
+
+@section('forscript')
+    {{-- Toast import js --}}
+    <script src="{{ URL::asset('/assets/plugins/toastr/toastr.min.js') }}"></script>
+    <script src="{{ URL::asset('/assets/plugins/toastr/toastr.js') }}"></script>
+
+    @if ($type != null)
+        <script>
+            let type = {!! json_encode($type) !!};
+            let msg = {!! json_encode($msg) !!};
+            const title = {!! json_encode($title) !!};
+            toastr[type](msg, title)
+        </script>
+    @endif
 
 @endsection

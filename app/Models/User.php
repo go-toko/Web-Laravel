@@ -74,7 +74,7 @@ class User extends Authenticatable
 
     public function userCashier()
     {
-        return $this->hasOne(UserCashierModel::class, foreignKey: 'user_id');
+        return $this->hasMany(UserCashierModel::class, foreignKey: 'user_id');
     }
 
     public function sales()

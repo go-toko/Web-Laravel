@@ -89,7 +89,7 @@ class MyProfileController extends Controller
         if ($request->hasFile('picture')) {
 
 
-            if ($data->picturePath && Storage::disk('s3')->exists($data->picturePath)) {
+            if ($data->picturePath &&  Storage::disk('s3')->exists($data->picturePath)) {
                 Storage::disk('s3')->delete($data->picturePath);
             }
 
@@ -98,7 +98,7 @@ class MyProfileController extends Controller
             $ext = $image->getClientOriginalExtension();
 
             // Using S3 bucket AWS
-            $filename = "images/picture/" . Auth::user()->userProfile->first_name . Auth::user()->userProfile->last_name . '_' . time() . '_' . Str::random(5) . '.' . $ext;
+            $filename = Auth::user()->userProfile->first_name . Auth::user()->userProfile->last_name . '_' . time() . '_' . Str::random(5) . '.' . $ext;
             $filepath = 'pp/' . $filename;
             $compressedImage = Image::make($image)
                 ->resize(500, null, function ($constraint) {
@@ -106,14 +106,9 @@ class MyProfileController extends Controller
                 })
                 ->encode($ext, 75);
 
+            Storage::disk('s3')->put($filepath, $compressedImage->__toString());
 
-            $upload = Storage::disk('s3')->put($filename, $compressedImage->__toString(), ['visibility' => 'public']);
-
-            if (!$upload) {
-                return back()->with(['error' => 'Gagal mengunggah gambar, Hubungi Admin', 'type' => 'error']);
-            }
-
-            $filename = Storage::disk('s3')->url($filename);
+            $object = Storage::disk('s3')->url($filepath);
 
             // Using local storage
             // $filename = time() . '-' . str_replace(' ', '-', Str::random(5));
@@ -143,7 +138,7 @@ class MyProfileController extends Controller
                 'nickname' => $request->nickname,
                 'phone' => $request->phone,
                 'picturePath' => $request->file('picture') ? $filepath : $data->picturePath,
-                'picture' => $request->file('picture') ? $filename : $data->picture,
+                'picture' => $request->file('picture') ? $object : $data->picture,
                 'gender' => $request->gender,
                 'birthdate' => isset($request->birthdate) ? Carbon::createFromFormat('d-m-Y', $request->birthdate)->format('Y-m-d') : null,
                 'address' => $request->address,

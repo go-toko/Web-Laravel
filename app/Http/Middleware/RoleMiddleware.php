@@ -18,17 +18,20 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, ...$roles)
     {
-        foreach ($roles as $guard) {
-            if (Auth::guard($guard)->check()) {
-                $role = Auth::user()->role->name;
-                return match ($role) {
-                    'Superadmin' => redirect(~route('superadmin.dashboard')),
-                    'Owner' => redirect(route('owner.dashboard')),
-                    'Cashier' => redirect(route('cashier.dashboard')),
-                    default => redirect(RouteServiceProvider::HOME),
-                };
+
+        foreach ($roles as $role) {
+            if ($request->user()->hasRole($role)) {
+                return $next($request);
             }
         }
+
+        $role = Auth::user()->role->name;
+        return match ($role) {
+            'Superadmin' => redirect(~route('superadmin.dashboard')),
+            'Owner' => redirect(route('owner.dashboard')),
+            'Cashier' => redirect(route('cashier.dashboard')),
+            default => redirect(RouteServiceProvider::HOME),
+        };
 
         return redirect('login');
     }

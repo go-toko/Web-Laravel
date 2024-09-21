@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Session;
 use Maatwebsite\Excel\Facades\Excel;
+use Storage;
 
 class ProductsController extends Controller
 {
@@ -71,14 +72,14 @@ class ProductsController extends Controller
     {
         try {
             if ($request->hasFile('image')) {
-                $filename = round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
-                $request->file('image')->move(public_path('images/products'), $filename);
+                $filename = "images/products/" . round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
+                Storage::disk('s3')->put($filename, file_get_contents($request->file('image')));
             } else {
                 $filename = 'noimage.png';
             }
             $name = $request->name;
-            $request['buying_price'] =  implode('', explode('.', str_replace('Rp', '', $request->buying_price)));
-            $request['selling_price'] =  implode('', explode('.', str_replace('Rp', '', $request->selling_price)));
+            $request['buying_price'] = implode('', explode('.', str_replace('Rp', '', $request->buying_price)));
+            $request['selling_price'] = implode('', explode('.', str_replace('Rp', '', $request->selling_price)));
 
             $category = ProductsCategoryModel::with([])->whereRaw("name = LOWER('$request->category')")->first();
             $brand = ProductBrand::with([])->whereRaw("name = LOWER('$request->brand')")->first();
@@ -163,19 +164,19 @@ class ProductsController extends Controller
 
             if ($request->hasFile('image')) {
                 // Deleting old image
-                if (File::exists(public_path('images/products/' . $productData->images))) {
-                    File::delete(public_path('images/products/' . $productData->images));
+                if (Storage::disk('s3')->exists($productData->images)) {
+                    Storage::disk('s3')->delete($productData->images);
                 }
                 // Store new image
-                $filename = round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
-                $request->file('image')->move(public_path('images/products'), $filename);
+                $filename = "images/products/" . round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
+                Storage::disk('s3')->put($filename, file_get_contents($request->file('image')));
 
                 $productData->update([
                     'images' => $filename
                 ]);
             }
-            $request['buying_price'] =  implode('', explode('.', str_replace('Rp', '', $request->buying_price)));
-            $request['selling_price'] =  implode('', explode('.', str_replace('Rp', '', $request->selling_price)));
+            $request['buying_price'] = implode('', explode('.', str_replace('Rp', '', $request->buying_price)));
+            $request['selling_price'] = implode('', explode('.', str_replace('Rp', '', $request->selling_price)));
             $category = ProductsCategoryModel::with([])->whereRaw("name = LOWER('$request->category')")->first();
             $brand = ProductBrand::with([])->whereRaw("name = LOWER('$request->brand')")->first();
 
@@ -206,7 +207,8 @@ class ProductsController extends Controller
     {
         try {
             $data = $this->getProductsById(Crypt::decrypt($id))->first();
-            if (!$data) return response()->json(["msg" => "Ada sesuatu yang salah. Coba lagi!"]);
+            if (!$data)
+                return response()->json(["msg" => "Ada sesuatu yang salah. Coba lagi!"]);
 
             $data->update([
                 'isActive' => false,
@@ -220,14 +222,14 @@ class ProductsController extends Controller
     public function checkSKU(Request $request)
     {
         $counter = 0;
-        $padLength = 10 - strlen((string)$counter);
+        $padLength = 10 - strlen((string) $counter);
         $nameSku = str_pad($request->sku, $padLength, "0", STR_PAD_RIGHT);
-        $newName = $nameSku . (string)$counter;
+        $newName = $nameSku . (string) $counter;
         while (ProductsModel::where('sku', $newName)->exists()) {
             $counter++;
-            $padLength = 10 - strlen((string)$counter);
+            $padLength = 10 - strlen((string) $counter);
             $nameSku = str_pad($request->sku, $padLength, "0", STR_PAD_RIGHT);
-            $newName = $nameSku . (string)$counter;
+            $newName = $nameSku . (string) $counter;
         }
         return $newName;
     }
@@ -258,13 +260,15 @@ class ProductsController extends Controller
         if ($request->query('category')) {
             $category = ProductsCategoryModel::where(['id' => $request->query('category')])->first();
             $products = $request->query('category') == 'all' ? $products : $products->map(function ($item) use ($category) {
-                if ($item->category_id == $category->id) return $item;
+                if ($item->category_id == $category->id)
+                    return $item;
             })->filter();
         }
         if ($request->query('brand')) {
             $brandId = $request->query('brand');
             $products = $request->query('brand') == 'all' ? $products : $products->map(function ($item) use ($brandId) {
-                if ($item->brand_id == $brandId) return $item;
+                if ($item->brand_id == $brandId)
+                    return $item;
             })->filter();
         }
         return $products;
@@ -325,7 +329,8 @@ class ProductsController extends Controller
     {
         try {
             $data = $this->getProductsById(Crypt::decrypt($id))->first();
-            if (!$data) return response()->json(["msg" => "Ada sesuatu yang salah. Coba lagi!"]);
+            if (!$data)
+                return response()->json(["msg" => "Ada sesuatu yang salah. Coba lagi!"]);
             $data->update([
                 'isActive' => true,
             ]);

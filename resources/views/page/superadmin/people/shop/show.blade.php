@@ -160,8 +160,8 @@
                                                                 <td>
                                                                     <a href="javascript:void(0);">{{ $item->name }}</a>
                                                                 </td>
-                                                                <td>{{ $item->brand->name }}</td>
-                                                                <td>{{ $item->category->name }}</td>
+                                                                <td>{{ $item->brand->name ?? '' }}</td>
+                                                                <td>{{ $item->category->name ?? '' }}</td>
                                                             </tr>
                                                         @endforeach
 

@@ -106,7 +106,7 @@
                                             <td class="productimgname">
                                                 <a href="javascript:void(0);" class="product-img">
                                                     @if ($product->images != 'noimage.png')
-                                                        <img src="{{ URL::asset('images/products/' . $product->images) }}"
+                                                        <img src="{{ env('AWS_ENDPOINT_BUCKET') }}/{{ $product->images }}"
                                                             alt="{{ $product->name }}" />
                                                     @elseif ($product->images == 'noimage.png')
                                                         <img src="{{ URL::asset('images/' . $product->images) }}"
@@ -116,8 +116,8 @@
                                                 {{ $product->name }}
                                             </td>
                                             <td>{{ $product->description }}</td>
-                                            <td>{{ $product->category->name }}</td>
-                                            <td>{{ $product->brand->name }}</td>
+                                            <td>{{ $product->category->name ?? '' }}</td>
+                                            <td>{{ $product->brand->name ?? '' }}</td>
                                             <td>{{ $product->sku }}</td>
                                             <td>{{ $product->quantity }}</td>
                                             <td>{{ $product->unit }}</td>

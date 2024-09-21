@@ -35,7 +35,7 @@
                                 <ul class="product-bar">
                                     <li>
                                         <h4>Toko</h4>
-                                        <h6>{{ $expense->shop->name }}</h6>
+                                        <h6>{{ $expense->shop->name ?? '' }}</h6>
                                     </li>
                                     <li>
                                         <h4>Pengeluaran Untuk</h4>
@@ -43,7 +43,7 @@
                                     </li>
                                     <li>
                                         <h4>Kategori Pengeluaran</h4>
-                                        <h6>{{ $expense->category->name }}</h6>
+                                        <h6>{{ $expense->category->name ?? '' }}</h6>
                                     </li>
                                     <li>
                                         <h4>Jumlah Pengeluaran</h4>
@@ -80,9 +80,8 @@
                                 <div class="owl-carousel owl-theme product-slide">
                                     <div class="slider-product">
                                         @if ($expense->image_nota && $expense->image_nota != 'noimage.png')
-                                            <img src="{{ URL::asset('images/nota/' . $expense->image_nota) }}"
-                                                alt="img">
-                                            <h4>{{ $expense->image_nota ?? 'noimage.png' }}</h4>
+                                            <img src="{{ env('AWS_ENDPOINT_BUCKET') }}/{{ $expense->image_nota }}"
+                                                alt="{{ $expense->image_nota }}" />
                                         @else
                                             <img src="{{ URL::asset('images/noimage.png') }}" alt="img">
                                             <h4>{{ $expense->image_nota ?? 'Belum ada nota' }}</h4>

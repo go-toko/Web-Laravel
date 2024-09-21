@@ -17,15 +17,15 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
+use Storage;
 
 class ExpensesController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\Factory
      */
     public function index(Request $request)
     {
@@ -39,7 +39,7 @@ class ExpensesController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\Factory
      */
     public function create()
     {
@@ -53,33 +53,22 @@ class ExpensesController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(ExpensesValidate $request)
     {
         try {
             if ($request->hasFile('image')) {
-                $filename = round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
-                $request->file('image')->move(public_path('images/nota'), $filename);
+                $filename = "images/nota/" . round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
+                Storage::disk('s3')->put($filename, file_get_contents($request->file('image')));
             } else {
                 $filename = 'noimage.png';
             }
-            // DONE: Conver format Rp. to number only
-            // DONE: implement store balance reduction
-            $idShop = Crypt::decrypt(Session::get('active'));
 
-            $shop = ShopModel::where(['id' => $idShop])->first();
+            $idShop = Crypt::decrypt(Session::get('active'));
             $request['amount'] = implode('', explode('.', str_replace('Rp', '', $request->amount)));
 
-            // Saldo
-            // if ($shop->balance < $request->amount) {
-            //     throw new CustomException('Saldo tidak cukup', 400);
-            // }
-
             DB::beginTransaction();
-            // $shop->update([
-            //     'balance' => $shop->balance - $request->amount,
-            // ]);
 
             ExpensesModel::create([
                 'name' => $request->name,
@@ -105,7 +94,7 @@ class ExpensesController extends Controller
      * Display the specified resource.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\Factory
      */
     public function show($id)
     {
@@ -121,7 +110,7 @@ class ExpensesController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\Factory
      */
     public function edit($id)
     {
@@ -138,39 +127,32 @@ class ExpensesController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(ExpensesValidate $request, $id)
     {
         try {
             // DONE: implement store balance adjustment 
             $expense = $this->getExpenseById($id);
-            $shop = $this->getShopActive();
 
             // Convert Rp. format to number only 
             $request['amount'] = implode('', explode('.', str_replace('Rp', '', $request->amount)));
 
-            // Saldo
-            // if ($shop->balance + $expense->amount - $request->amount < 0) {
-            //     throw new CustomException('Saldo tidak cukup untuk melakukan pengeditan pengeluaran ini. Silahkan cek saldo anda!');
-            // }
-
             DB::beginTransaction();
 
             if ($request->hasFile('image')) {
-                // Deleting old image
-                if (File::exists(public_path('images/nota/' . $expense->image_nota))) {
-                    File::delete(public_path('images/nota/' . $expense->image_nota));
+                if (Storage::disk('s3')->exists($expense->image_nota)) {
+                    Storage::disk('s3')->delete($expense->image_nota);
                 }
-                $filename = round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
-                $request->file('image')->move(public_path('images/nota'), $filename);
+
+                $filename = "images/nota/" . round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
+                Storage::disk('s3')->put($filename, file_get_contents($request->file('image')));
+
                 $expense->update([
                     'image_nota' => $filename
                 ]);
+
             }
-            // $shop->update([
-            //     'balance' => $shop->balance + $expense->amount - $request->amount,
-            // ]);
 
             // Save updated expense information
             $expense->update([
@@ -201,7 +183,8 @@ class ExpensesController extends Controller
     {
         try {
             $data = $this->getExpenseById($id);
-            if (!$data) return response()->json(["msg" => "Gagal menghapus pengeluaran. Coba lagi!!"]);
+            if (!$data)
+                return response()->json(["msg" => "Gagal menghapus pengeluaran. Coba lagi!!"]);
 
             $data->delete();
             return response()->json(["msg" => "Pengeluaran berhasil dihapus."]);

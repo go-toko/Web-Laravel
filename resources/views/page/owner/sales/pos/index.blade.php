@@ -127,8 +127,7 @@
                                         <div class="productset flex-fill" data-id="{{ $item->id }}"
                                             data-name="{{ $item->name }}" data-price="{{ $item->price_sell }}"
                                             data-image="{{ URL::asset('/images/products/' . $item->images) }}"
-                                            data-quantity="{{ $item->quantity }}"
-                                            onclick="addToCart(event)">
+                                            data-quantity="{{ $item->quantity }}" onclick="addToCart(event)">
                                             <div class="productsetimg">
                                                 <img src="{{ URL::asset('/images/products/' . $item->images) }}"
                                                     alt="img">
@@ -138,7 +137,7 @@
                                                 </div>
                                             </div>
                                             <div class="productsetcontent">
-                                                <h5>{{ $item->category->name }}</h5>
+                                                <h5>{{ $item->category->name ?? '' }}</h5>
                                                 <h4>{{ $item->name }}</h4>
                                                 <h6>Rp. {{ $item->price_sell }}</h6>
                                             </div>
@@ -156,8 +155,7 @@
                                             <div class="productset flex-fill" data-id="{{ $item->id }}"
                                                 data-name="{{ $item->name }}" data-price="{{ $item->price_sell }}"
                                                 data-image="{{ URL::asset('/images/products/' . $item->images) }}"
-                                                data-quantity="{{ $item->quantity }}"
-                                                onclick="addToCart(event)">
+                                                data-quantity="{{ $item->quantity }}" onclick="addToCart(event)">
                                                 <div class="productsetimg">
                                                     <img src="{{ URL::asset('/images/products/' . $item->images) }}"
                                                         alt="img">
@@ -167,7 +165,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="productsetcontent">
-                                                    <h5>{{ $item->category->name }}</h5>
+                                                    <h5>{{ $item->category->name ?? '' }}</h5>
                                                     <h4>{{ $item->name }}</h4>
                                                     <h6>Rp. {{ $item->price_sell }}</h6>
                                                 </div>

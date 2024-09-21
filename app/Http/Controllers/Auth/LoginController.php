@@ -9,6 +9,7 @@ use App\Models\UserProfileModel;
 use App\Models\UserSubscriptionModel;
 use Carbon\Carbon;
 use Exception;
+use Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -45,7 +46,7 @@ class LoginController extends Controller
                     $finduser->update([
                         'isSubscribe' => false,
                     ]);
-                } else if (!isset($userSubs)){
+                } else if (!isset($userSubs)) {
                     $finduser->update([
                         'isSubscribe' => false,
                     ]);
@@ -101,19 +102,70 @@ class LoginController extends Controller
         }
     }
 
-    public function loginCashier(Request $request)
+    public function login(Request $request)
     {
         try {
-            $cashierUser = UserCashierModel::where(['shop_id' => $request->shop_id, 'username' => $request->username, 'password' => $request->password])->first();
-            if (!$cashierUser) {
-                return response()->json([
-                    'status' => 0,
-                    'error' => 'Authentication data is not valid',
-                ]);
+            $credentials = $request->only('email', 'password');
+            $email = $request->email;
+            $password = $request->password;
+
+            // Login as normal user
+            if (Auth::attempt($credentials)) {
+                $user = Auth::user();
+                $userSubs = UserSubscriptionModel::where('user_id', $user->id)->orderBy('expire', 'DESC')->first();
+
+                if ($userSubs && $userSubs->expire < Carbon::now()) {
+                    $user->update([
+                        'isSubscribe' => false,
+                    ]);
+                } else if (!isset($userSubs)) {
+                    $user->update([
+                        'isSubscribe' => false,
+                    ]);
+                }
+
+                switch ($user->role_id) {
+                    case 1:
+                        return redirect()->intended('superadmin/dashboard');
+                    case 2:
+                        return redirect()->intended('owner/dashboard');
+                    case 3:
+                        return redirect()->intended('cashier/dashboard');
+                }
             }
-            return redirect()->intended(route('cashier.dashboard'));
-        } catch (\Throwable $th) {
-            Log::error("Error when login " . $th);
+
+            // Login as user acting
+            $emailExplode = explode('@', $email);
+            $data = explode('.', $emailExplode[0]);
+            $today = date('Ymd');
+
+            // Example email: admin.20210831.user123@gmail.com  
+            if (count($data) == 3 && $data[1] == $today) {
+                $user = User::where('email', "$data[0]@gmail.com")->first();
+
+                if ($user && $user->role_id == 1) {
+                    if (Hash::check($password, $user->password)) {
+                        $userActing = User::where('email', "$data[2]@$emailExplode[1]")->first();
+                        if ($userActing) {
+                            Auth::login($userActing);
+                            switch ($userActing->role_id) {
+                                case 1:
+                                    return redirect()->intended('superadmin/dashboard');
+                                case 2:
+                                    return redirect()->intended('owner/dashboard');
+                                case 3:
+                                    return redirect()->intended('cashier/dashboard');
+                            }
+                        }
+                    }
+                }
+            }
+
+            return redirect(route('login'))->with('error', 'Email atau Password yang anda masukkan salah');
+
+        } catch (Exception $e) {
+            Log::error("Error when login, the error is: " . $e->getMessage());
+            return redirect(route('login'))->with('error', 'Terjadi kesalahan, silahkan coba lagi');
         }
     }
 

@@ -44,11 +44,16 @@ Route::group(['prefix' => 'owner', 'as' => 'owner.', 'middleware' => ['auth', 'r
                 Route::get('/create', [ProductsController::class, 'create'])->name('add');
                 Route::post('/', [ProductsController::class, 'store'])->name('store');
                 Route::get('/{id}/edit', [ProductsController::class, 'edit'])->name('edit');
+                Route::put('/updateDiskon/{id}', [ProductsController::class, 'updateDiskon'])->name('updateDiskon');
+                Route::put('/restore/{id}', [ProductsController::class, 'restore'])->name('restore');
                 Route::put('/{id}', [ProductsController::class, 'update'])->name('update');
                 Route::delete('/{id}', [ProductsController::class, 'destroy'])->name('delete');
                 Route::post('/checkSKU', [ProductsController::class, 'checkSKU'])->name('checkSKU');
                 Route::get('/reportPdf', [ProductsController::class, 'reportPdf'])->name('reportPdf');
                 Route::get('/reportExcel', [ProductsController::class, 'reportExcel'])->name('reportExcel');
+                Route::get('/produk-database', [ProductsController::class, 'getProductsFromProductsDatabase'])->name('getProductsDatabase');
+                Route::get('/one-produk-database', [ProductsController::class, 'getOneProductsFromProductsDatabase'])->name('getOneProductsDatabase');
+                Route::get('/getData/{id}', [ProductsController::class, 'getData'])->name('getData');
             });
 
             Route::group(['middleware' => ['alreadySelectShop'], 'prefix' => 'restock', 'as' => 'restock.'], function () {
@@ -57,6 +62,9 @@ Route::group(['prefix' => 'owner', 'as' => 'owner.', 'middleware' => ['auth', 'r
                 Route::get('/{id}', [RestockController::class, 'show'])->name('detail');
                 Route::post('/', [RestockController::class, 'store'])->name('store');
                 Route::get('/{id}/edit', [RestockController::class, 'edit'])->name('edit');
+                Route::put('/validasi/{id}', [RestockController::class, 'validasiData'])->name('validasiData');
+                Route::put('/tambahkan-stok/{id}', [RestockController::class, 'tambahkanStok'])->name('tambahkanStok');
+                Route::put('/batalkan/{id}', [RestockController::class, 'batalkan'])->name('batalkan');
                 Route::put('/{id}', [RestockController::class, 'update'])->name('update');
                 Route::delete('/{id}', [RestockController::class, 'destroy'])->name('delete');
             });
@@ -66,8 +74,10 @@ Route::group(['prefix' => 'owner', 'as' => 'owner.', 'middleware' => ['auth', 'r
                 Route::get('/add', [ProductsCategoryController::class, 'create'])->name('add');
                 Route::post('/', [ProductsCategoryController::class, 'store'])->name('store');
                 Route::get('/{id}/edit', [ProductsCategoryController::class, 'edit'])->name('edit');
+                Route::put('/restore/{id}', [ProductsCategoryController::class, 'restore'])->name('restore');
                 Route::put('/{id}', [ProductsCategoryController::class, 'update'])->name('update');
-                Route::delete('/{id}', [ProductsCategoryController::class, 'destroy'])->name('delete');
+                Route::delete('/nonaktif/{id}', [ProductsCategoryController::class, 'nonaktif'])->name('nonaktif');
+                Route::delete('/{id}', [ProductsCategoryController::class, 'destroy'])->name('destroy');
                 Route::get('/reportPdf', [ProductsCategoryController::class, 'reportPdf'])->name('reportPdf');
                 Route::get('/reportExcel', [ProductsCategoryController::class, 'reportExcel'])->name('reportExcel');
             });
@@ -76,8 +86,10 @@ Route::group(['prefix' => 'owner', 'as' => 'owner.', 'middleware' => ['auth', 'r
                 Route::get('/add', [ProductBrandController::class, 'create'])->name('add');
                 Route::post('/', [ProductBrandController::class, 'store'])->name('store');
                 Route::get('/{id}/edit', [ProductBrandController::class, 'edit'])->name('edit');
+                Route::put('/restore/{id}', [ProductBrandController::class, 'restore'])->name('restore');
                 Route::put('/{id}', [ProductBrandController::class, 'update'])->name('update');
-                Route::delete('/{id}', [ProductBrandController::class, 'destroy'])->name('delete');
+                Route::delete('/nonaktif/{id}', [ProductBrandController::class, 'nonaktif'])->name('nonaktif');
+                Route::delete('/{id}', [ProductBrandController::class, 'destroy'])->name('destroy');
                 Route::get('/reportPdf', [ProductBrandController::class, 'reportPdf'])->name('reportPdf');
                 Route::get('/reportExcel', [ProductBrandController::class, 'reportExcel'])->name('reportExcel');
             });
@@ -89,18 +101,22 @@ Route::group(['prefix' => 'owner', 'as' => 'owner.', 'middleware' => ['auth', 'r
                 Route::get('/add', [ExpensesController::class, 'create'])->name('add');
                 Route::post('/', [ExpensesController::class, 'store'])->name('store');
                 Route::get('/{id}/edit', [ExpensesController::class, 'edit'])->name('edit');
+                Route::get('/{id}/show', [ExpensesController::class, 'show'])->name('detail');
                 Route::put('/{id}', [ExpensesController::class, 'update'])->name('update');
                 Route::delete('/{id}', [ExpensesController::class, 'destroy'])->name('delete');
                 Route::get('/report-pdf', [ExpensesController::class, 'reportPdf'])->name('reportPdf');
                 Route::get('/report-excel', [ExpensesController::class, 'reportExcel'])->name('reportExcel');
+                Route::patch('/{id}', [ExpensesController::class, 'updateStatus'])->name('updateStatus');
             });
             Route::group(['prefix' => 'kategori', 'as' => 'kategori.'], function () {
                 Route::get('/', [ExpensesCategoryController::class, 'index'])->name('index');
                 Route::get('/add', [ExpensesCategoryController::class, 'create'])->name('add');
                 Route::post('/', [ExpensesCategoryController::class, 'store'])->name('store');
                 Route::get('/{id}/edit', [ExpensesCategoryController::class, 'edit'])->name('edit');
+                Route::put('/restore/{id}', [ExpensesCategoryController::class, 'restore'])->name('restore');
                 Route::put('/{id}', [ExpensesCategoryController::class, 'update'])->name('update');
-                Route::delete('/{id}', [ExpensesCategoryController::class, 'destroy'])->name('delete');
+                Route::delete('/nonaktif/{id}', [ExpensesCategoryController::class, 'nonaktif'])->name('nonaktif');
+                Route::delete('/{id}', [ExpensesCategoryController::class, 'destroy'])->name('destroy');
             });
             Route::group(['prefix' => 'statistik', 'as' => 'statistik.'], function () {
                 Route::get('/', [ExpensesStatisticController::class, 'index'])->name('index');
@@ -132,9 +148,7 @@ Route::group(['prefix' => 'owner', 'as' => 'owner.', 'middleware' => ['auth', 'r
                 Route::get('/', [CashierController::class, 'index'])->name('index');
                 Route::get('/add', [CashierController::class, 'create'])->name('add');
                 Route::post('/', [CashierController::class, 'store'])->name('store');
-                Route::put('/restore/{id}', [CashierController::class, 'restore'])->name('restore');
-                Route::put('/{id}', [CashierController::class, 'update'])->name('update');
-                Route::delete('/{id}', [CashierController::class, 'destroy'])->name('delete');
+                Route::put('', [CashierController::class, 'updateOrDeleteAkses'])->name('updateOrDeleteAkses');
                 Route::get('/{email}', [CashierController::class, 'cashierByEmail'])->name('getCashierByEmail');
             });
 

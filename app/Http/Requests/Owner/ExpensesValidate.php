@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Owner;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Route;
 
 class ExpensesValidate extends FormRequest
 {
@@ -23,11 +24,17 @@ class ExpensesValidate extends FormRequest
      */
     public function rules()
     {
+        if (Route::is('owner.pengeluaran.pengeluaran.updateStatus')) {
+            return [
+                'status' => 'required',
+            ];
+        }
         return [
             'name' => 'required',
             'date' => 'required',
             'amount' => 'required',
-            'category' => 'required'
+            'category' => 'required',
+            'image' => 'required|file|image|max:2048'
         ];
     }
 }

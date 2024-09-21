@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
 
+use function PHPSTORM_META\map;
+
 class CashierValidate extends FormRequest
 {
     /**
@@ -27,16 +29,21 @@ class CashierValidate extends FormRequest
     {
         if (Route::is('owner.orang.kasir.store')) {
             return [
-                'name' => 'required',
+                'first_name' => 'required',
+                'last_name' => 'required',
                 'gender' => 'required',
-                'email' => 'required|email',
-                'username' => 'required|unique:user_cashier,username',
+                'phone' => 'required',
+                'shop' => 'required',
+                'email' => 'required|email|unique:users,email',
+                'nickname' => 'required',
                 'password' => 'min:8|required_with:password_confirmation|same:password_confirmation',
                 'password_confirmation' => 'min:8|required_with:password|same:password',
             ];
-        } else if (Route::is('owner.orang.kasir.update')) {
+        } else if (Route::is('owner.orang.kasir.updateOrDeleteAkses')) {
             return [
-                'status' => 'required',
+                'shopId' => 'required',
+                'cashierId' => 'required',
+                'value' => 'required'
             ];
         }
     }

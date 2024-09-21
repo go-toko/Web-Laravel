@@ -154,8 +154,8 @@
                         <tr>
                             <td>{{ $loop->iteration }}</td>
                             <td>{{ $item->name }}</td>
-                            <td>{{ $item->brand->name }}</td>
-                            <td>{{ $item->category->name }}</td>
+                            <td>{{ $item->brand->name ?? '' }}</td>
+                            <td>{{ $item->category->name ?? '' }}</td>
                             <td>{{ $item->price_buy }}</td>
                             <td>{{ $item->price_sell }}</td>
                             <td>{{ Carbon\Carbon::parse($item->created_at)->format('d M Y') }}</td>
@@ -163,7 +163,7 @@
                     @endforeach
                 </table>
             @else
-            -
+                -
             @endif
         @endforeach
     @else

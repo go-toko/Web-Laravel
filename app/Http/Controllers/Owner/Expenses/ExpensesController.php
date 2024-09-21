@@ -15,29 +15,31 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
+use Storage;
 
 class ExpensesController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\Factory
      */
     public function index(Request $request)
     {
         $expenses = $this->getDataByFilter($request);
         return view('page.owner.expenses.index', [
             'expenses' => $expenses->sortByDesc('date'),
+            'status' => ExpensesModel::status,
         ]);
     }
 
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\Factory
      */
     public function create()
     {
@@ -51,27 +53,22 @@ class ExpensesController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(ExpensesValidate $request)
     {
         try {
-            // DONE: Conver format Rp. to number only
-            // DONE: implement store balance reduction
-            $idShop = Crypt::decrypt(Session::get('active'));
+            if ($request->hasFile('image')) {
+                $filename = "images/nota/" . round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
+                Storage::disk('s3')->put($filename, file_get_contents($request->file('image')));
+            } else {
+                $filename = 'noimage.png';
+            }
 
-            $shop = ShopModel::where(['id' => $idShop])->first();
+            $idShop = Crypt::decrypt(Session::get('active'));
             $request['amount'] = implode('', explode('.', str_replace('Rp', '', $request->amount)));
 
-            // Saldo
-            // if ($shop->balance < $request->amount) {
-            //     throw new CustomException('Saldo tidak cukup', 400);
-            // }
-
             DB::beginTransaction();
-            // $shop->update([
-            //     'balance' => $shop->balance - $request->amount,
-            // ]);
 
             ExpensesModel::create([
                 'name' => $request->name,
@@ -80,6 +77,7 @@ class ExpensesController extends Controller
                 'description' => $request->description,
                 'date' => Carbon::createFromFormat('d-m-Y', $request->date),
                 'amount' => $request->amount,
+                'image_nota' => $filename,
             ]);
             DB::commit();
         } catch (\Throwable $e) {
@@ -96,18 +94,23 @@ class ExpensesController extends Controller
      * Display the specified resource.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\Factory
      */
     public function show($id)
     {
-        //
+        $expense = $this->getExpenseById($id);
+        $statusValue = ExpensesModel::status;
+        return view('page.owner.expenses.show', [
+            'expense' => $expense,
+            'status' => $statusValue
+        ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\Factory
      */
     public function edit($id)
     {
@@ -124,27 +127,32 @@ class ExpensesController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, $id)
+    public function update(ExpensesValidate $request, $id)
     {
         try {
             // DONE: implement store balance adjustment 
             $expense = $this->getExpenseById($id);
-            $shop = $this->getShopActive();
 
             // Convert Rp. format to number only 
             $request['amount'] = implode('', explode('.', str_replace('Rp', '', $request->amount)));
 
-            // Saldo
-            // if ($shop->balance + $expense->amount - $request->amount < 0) {
-            //     throw new CustomException('Saldo tidak cukup untuk melakukan pengeditan pengeluaran ini. Silahkan cek saldo anda!');
-            // }
-
             DB::beginTransaction();
-            // $shop->update([
-            //     'balance' => $shop->balance + $expense->amount - $request->amount,
-            // ]);
+
+            if ($request->hasFile('image')) {
+                if (Storage::disk('s3')->exists($expense->image_nota)) {
+                    Storage::disk('s3')->delete($expense->image_nota);
+                }
+
+                $filename = "images/nota/" . round(microtime(true) * 1000) . '-' . str_replace(' ', '-', $request->file('image')->getClientOriginalName());
+                Storage::disk('s3')->put($filename, file_get_contents($request->file('image')));
+
+                $expense->update([
+                    'image_nota' => $filename
+                ]);
+
+            }
 
             // Save updated expense information
             $expense->update([
@@ -175,7 +183,8 @@ class ExpensesController extends Controller
     {
         try {
             $data = $this->getExpenseById($id);
-            if (!$data) return response()->json(["msg" => "Gagal menghapus pengeluaran. Coba lagi!!"]);
+            if (!$data)
+                return response()->json(["msg" => "Gagal menghapus pengeluaran. Coba lagi!!"]);
 
             $data->delete();
             return response()->json(["msg" => "Pengeluaran berhasil dihapus."]);
@@ -197,7 +206,7 @@ class ExpensesController extends Controller
 
     private function getExpenseById($id)
     {
-        return ExpensesModel::findOrFail(Crypt::decrypt($id));
+        return ExpensesModel::with(['category', 'shop'])->findOrFail(Crypt::decrypt($id));
     }
 
     private function getShopActive()
@@ -248,5 +257,25 @@ class ExpensesController extends Controller
             'expenses' => $expenses->sortByDesc('date')
         ]);
         return Excel::download(new OwnerReportExport($view), time() . '-laporan-pengeluaran.xlsx');
+    }
+
+    public function updateStatus(ExpensesValidate $request, $id)
+    {
+        $expense = $this->getExpenseById($id);
+        try {
+            DB::beginTransaction();
+            $expense->update([
+                'status' => $request->status
+            ]);
+            DB::commit();
+            $message = 'Berhasil menyelesaikan pengeluaran.';
+            if ($request->status == 'BATAL') {
+                $message = 'Berhasil membatalkan pengeluaran.';
+            }
+            return response()->json(['title' => 'Berhasil!!', 'type' => 'success', 'msg' => $message]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['title' => 'Gagal!!', 'type' => 'error', 'msg' => 'Ada sesuatu yang salah. Coba lagi!!']);
+        }
     }
 }

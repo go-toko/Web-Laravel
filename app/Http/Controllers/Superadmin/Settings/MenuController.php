@@ -10,7 +10,6 @@ use Dompdf\Dompdf;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -22,21 +21,17 @@ class MenuController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Contracts\View\View
+     * @return \Illuminate\Http\Response
      */
     public function index()
     {
-
-        $data = RolesModel::with([
-            'roleMenu' => function ($query) {
-                $query->orderBy('order', 'ASC');
-            },
-            'roleMenu.menu.subMenu',
-        ])->get();
-
-
         return view('page.superadmin.settings.menu.index', [
-            'roles' => $data,
+            'roles' => RolesModel::with([
+                'roleMenu' => function ($query) {
+                    $query->orderBy('order', 'ASC');
+                },
+                'roleMenu.menu.subMenu',
+            ])->get(),
         ]);
     }
 
@@ -78,8 +73,6 @@ class MenuController extends Controller
             Log::error('Error when store data to databases in menus management, the error is : \n' . $exception);
             return response()->json(['status' => 0, 'msg' => $exception]);
         }
-
-        Cache::forget('menus' . $request->role_id);
 
         Log::alert('Menu has been created from user ' . Auth::user()->name . ' with menus name ' . $data['name']);
         return response()->json(['status' => 1, 'msg' => 'Success create the menu']);
@@ -125,8 +118,6 @@ class MenuController extends Controller
             return response()->json(['status' => 0, 'msg' => $exception]);
         }
 
-        Cache::forget('menus' . $request->role_id);
-
         Log::alert('Menu has been updated from user ' . Auth::user()->name . ' with menus name ' . $data['name']);
         return response()->json(['status' => 1, 'msg' => 'Success update the menu']);
     }
@@ -137,9 +128,6 @@ class MenuController extends Controller
 
         try {
             DB::beginTransaction();
-
-            $role = RoleMenuModel::where('id', $order[0])->first();
-            Cache::forget('menus' . $role->role_id);
 
             foreach ($order as $index => $itemId) {
                 RoleMenuModel::where('id', $itemId)->update(['order' => $index + 1]);
@@ -158,31 +146,17 @@ class MenuController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Request $request, $id)
+    public function destroy($id)
     {
         try {
-            $data = RoleMenuModel::with('menu')->where(['role_id' => $request->role_id, 'menu_id' => $id])->first();
-
-            if ($data == null) {
-                return response()->json(['status' => 'error']);
-            }
-
-            $data->delete();
-            Cache::forget('menus' . $request->role_id);
-
-            $role = RoleMenuModel::where('menu_id', $id)->count();
-            if ($role == 0) {
-                MenuModel::where('id', $id)->delete();
-            }
-
+            $data = MenuModel::findOrFail($id);
             Log::alert('Menu has been deleted from user ' . Auth::user()->name . ' with menus name' . $data->name);
+            $data->delete();
             return response()->json(['status' => 'success']);
         } catch (\Throwable $th) {
-
-            dd($th->getMessage());
             Log::error('Error when deleting data from menus management, the error is : \n' . $th->getMessage());
             return response()->json(['status' => 'error']);
         }

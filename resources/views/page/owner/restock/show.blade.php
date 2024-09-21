@@ -56,6 +56,23 @@
                                         <p>{{ Str::title($restock->shop?->address ? $restock->shop->address . ', ' . $restock->shop->village . ', ' . $restock->shop->district . ', ' . $restock->shop->regency . ', ' . $restock->shop->province : $restock->shop->village . ', ' . $restock->shop->district . ', ' . $restock->shop->regency . ', ' . $restock->shop->province) }}
                                         </p>
                                     </div>
+                                    <div class="col-lg-4 col-md-4 col-sm-4 col-12">
+                                        <h6 style="color: #7367F0" class="my-1">Informasi Restock</h6>
+                                        <div class="d-flex justify-content-between">
+                                            @php
+                                                $bg = [
+                                                    'bg-lightgrey',
+                                                    'bg-lightyellow',
+                                                    'bg-lightgreen',
+                                                    'bg-lightred',
+                                                ];
+                                            @endphp
+                                            <p>Status Restock</p>
+                                            <p><span
+                                                    class="badges {{ in_array($restock->status, $status) ? $bg[array_search($restock->status, $status)] : '' }}">{{ $restock->status }}</span>
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {{-- Product Section --}}
@@ -64,8 +81,9 @@
                                         <thead>
                                             <tr>
                                                 <th class="col-3">Nama Product</th>
-                                                <th class="col-3 text-end">Jumlah</th>
-                                                <th class="col-3 text-end">Harga Satuan</th>
+                                                <th class="col-2 text-end">Jumlah</th>
+                                                <th class="col-2 text-end">Harga Satuan</th>
+                                                <th class="col-2 text-end">Harga Jual Terbaru</th>
                                                 <th class="col-3 text-end">Subtotal</th>
                                             </tr>
                                         </thead>
@@ -79,6 +97,7 @@
                                                         {{ Str::lower($detail->product->unit) }}
                                                     </td>
                                                     <td class="formatRupiah text-end">{{ $detail->price_buy }}</td>
+                                                    <td class="formatRupiah text-end">{{ $detail->price_sell }}</td>
                                                     <td class="formatRupiah text-end">
                                                         {{ $detail->price_buy * $detail->quantity }}
                                                     </td>
@@ -101,8 +120,25 @@
                                         </div>
                                     </div>
                                     <div class="col-lg-12">
+                                        @if ($restock->status == 'PROSES')
+                                            <a class="btn btn-primary" id="validasi-data"
+                                                data-action="{{ route('owner.produk.restock.validasiData', ['id' => Crypt::encrypt($restock->id)]) }}">Validasi</a>
+                                        @endif
+                                        @if ($restock->status == 'SIAP DITAMBAHKAN')
+                                            <a class="btn btn-success" id="tambahkan"
+                                                data-action="{{ route('owner.produk.restock.tambahkanStok', ['id' => Crypt::encrypt($restock->id)]) }}">Tambahkan
+                                                Stok</a>
+                                        @endif
+                                        @if ($restock->status == 'PROSES')
+                                            <a href="{{ route('owner.produk.restock.edit', ['id' => Crypt::encrypt($restock->id)]) }}"
+                                                class="btn btn-info">Edit</a>
+                                        @endif
+                                        @if ($restock->status != 'BATAL' && $restock->status != 'SELESAI')
+                                            <a class="btn btn-danger" id="batalkan"
+                                                data-action="{{ route('owner.produk.restock.batalkan', ['id' => Crypt::encrypt($restock->id)]) }}">Batalkan</a>
+                                        @endif
                                         <a href="{{ route('owner.produk.restock.index') }}"
-                                            class="btn btn-cancel">Kembali</a>
+                                            class="btn btn-secondary">Kembali</a>
                                     </div>
                                 </div>
                             </div>
@@ -156,18 +192,18 @@ $msg = Session::get($type);
             })
         })
 
-        $(document).on('click', '#confirm-delete', function(event) {
+        $(document).on('click', '#validasi-data', function(event) {
             event.preventDefault();
             const url = $(this).data('action');
 
             Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
+                title: 'Apakah kamu yakin?',
+                text: "Kamu akan mengubah status restock dari 'Proses' menjadi 'Siap Ditambahkan' dan tidak bisa diedit lagi",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#dc3545',
+                confirmButtonColor: '#ff9f43',
                 cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, delete it!'
+                confirmButtonText: 'Ya, ubah!'
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
@@ -175,21 +211,109 @@ $msg = Session::get($type);
                         headers: {
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                         },
-                        type: 'DELETE',
+                        type: 'PUT',
                         success: function(data) {
                             Swal.fire({
-                                title: 'Deleted!',
+                                title: data.title,
                                 text: data.msg,
-                                icon: 'success',
+                                icon: data.type,
                                 timer: 1500,
                                 showConfirmButton: false
                             });
-                            location.reload();
+                            if (data.type == 'success') location.reload();
                         },
                         error: function(data) {
                             Swal.fire({
                                 title: 'Oops...',
+                                text: 'Ada sesuatu yang salah',
+                                icon: 'error',
+                                confirmButtonColor: '#dc3545'
+                            })
+                        }
+                    });
+                }
+            });
+        });
+
+        $(document).on('click', '#tambahkan', function(event) {
+            event.preventDefault();
+            const url = $(this).data('action');
+
+            Swal.fire({
+                title: 'Apakah kamu yakin?',
+                text: "Kamu akan menyelesaikan restock ini. Harga beli, harga jual dan stok akan disesuaikan",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff9f43',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url,
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        type: 'PUT',
+                        success: function(data) {
+                            console.log(data);
+                            Swal.fire({
+                                title: data.title,
                                 text: data.msg,
+                                icon: data.type,
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                            if (data.type == 'success') location.reload();
+                        },
+                        error: function(data) {
+                            Swal.fire({
+                                title: 'Oops...',
+                                text: 'Ada sesuatu yang salah',
+                                icon: 'error',
+                                confirmButtonColor: '#dc3545'
+                            })
+                        }
+                    });
+                }
+            });
+        });
+
+        $(document).on('click', '#batalkan', function(event) {
+            event.preventDefault();
+            const url = $(this).data('action');
+
+            Swal.fire({
+                title: 'Apakah kamu yakin?',
+                text: "Kamu akan menyelesaikan restock ini. Harga beli, harga jual dan stok akan disesuaikan",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff9f43',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url,
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        type: 'PUT',
+                        success: function(data) {
+                            console.log(data);
+                            Swal.fire({
+                                title: data.title,
+                                text: data.msg,
+                                icon: data.type,
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                            if (data.type == 'success') location.reload();
+                        },
+                        error: function(data) {
+                            Swal.fire({
+                                title: 'Oops...',
+                                text: 'Ada sesuatu yang salah',
                                 icon: 'error',
                                 confirmButtonColor: '#dc3545'
                             })

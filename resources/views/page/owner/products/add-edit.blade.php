@@ -28,17 +28,38 @@
             {{-- Body Start --}}
             <div class="row">
                 <div class="col-sm-12">
-
-                    @if (session('error'))
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            {{ session('error') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    @endif
-
-
                     <section class="comp-section">
                         <div class="card-body">
+                            @if (Route::is('owner.produk.daftar-produk.add'))
+                                <div class="row">
+                                    <div class="col-lg-5 col-sm-6 col-12">
+                                        <div class="form-group">
+                                            <label>Pencarian Berdasarkan Barcode</label>
+                                            <input id="searchBarcode" name="searchBarcode" type="text"
+                                                class="form-control" value="{{ old('searchBarcode') }}" autofocus>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-1 form-group mt-4 pt-1">
+                                        <a class="btn btn-filters" id="clickSearch"><img
+                                                src="{{ URL::asset('assets/img/icons/search-whites.svg') }}" alt="img"
+                                                data-bs-toggle="tooltip" title="Cari"></a>
+                                    </div>
+                                    <div class="col-lg-4 col-sm-6 col-12">
+                                        <div class="form-group">
+                                            <label>Hasil pencarian</label>
+                                            <select class="form-control select" name="resultSearch" id="resultSearch">
+                                                <option value="" disabled selected>Pilih...</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-2 col-sm-6 col-12">
+                                        <div class="form-group">
+                                            <label class="text-danger" id="messageErrorSearch"></label>
+                                            <label id="messageSuccessSearch"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
                             <form
                                 action="{{ isset($data) ? route('owner.produk.daftar-produk.update', Crypt::encrypt($data->id)) : route('owner.produk.daftar-produk.store') }}"
                                 method="post" enctype="multipart/form-data">
@@ -55,8 +76,8 @@
                                                 id="category">
                                                 <option value="" disabled selected>Pilih...</option>
                                                 @foreach ($categories as $category)
-                                                    <option value="{{ $category->id }}"
-                                                        @if (old('category') == $category->id || (isset($data) && $data->category_id == $category->id)) selected @endif>
+                                                    <option value="{{ $category->name }}"
+                                                        @if (strtolower(old('category')) == strtolower($category->name) || (isset($data) && $data->category_id == $category->id)) selected @endif>
                                                         {{ Str::ucfirst($category->name) }}</option>
                                                 @endforeach
                                             </select>
@@ -74,8 +95,8 @@
                                                 id="brand">
                                                 <option value="" disabled selected>Pilih...</option>
                                                 @foreach ($brands as $brand)
-                                                    <option value="{{ $brand->id }}"
-                                                        @if (old('brand') == $brand->id || (isset($data) && $data->brand_id == $brand->id)) selected @endif>
+                                                    <option value="{{ $brand->name }}"
+                                                        @if (strtolower(old('brand')) == strtolower($brand->name) || (isset($data) && $data->brand_id == $brand->id)) selected @endif>
                                                         {{ Str::ucfirst($brand->name) }}</option>
                                                 @endforeach
                                             </select>
@@ -89,7 +110,7 @@
                                             <label>Nama</label>
                                             <input id="name" name="name" type="text"
                                                 class="form-control @error('name') is-invalid @enderror"
-                                                value="{{ old('name') ?? ($data->name ?? null) }}" autofocus>
+                                                value="{{ old('name') ?? ($data->name ?? null) }}">
                                             @error('name')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -101,7 +122,8 @@
                                             <label>SKU</label>
                                             <input id="sku" name="sku" type="text"
                                                 class="form-control @error('sku') is-invalid @enderror"
-                                                value="{{ old('sku') ?? ($data->sku ?? null) }}" readonly>
+                                                value="{{ old('sku') ?? ($data->sku ?? null) }}"
+                                                @if (Route::is('owner.produk.daftar-produk.edit')) readonly @endif>
                                             @error('sku')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -248,9 +270,76 @@
                 }
             })
         }
+        if ({{ Route::is('owner.produk.daftar-produk.add') }}) {
+            $(document).on('change', '#name', function() {
+                autoCompleteSKU($(this).val());
+            })
+        }
 
-        $(document).on('change', '#name', function() {
-            autoCompleteSKU($(this).val());
+        $(document).on('click', '#clickSearch', async function() {
+            const value = $('#searchBarcode').val();
+            if (!value) {
+                return false;
+            }
+            let dataProducts = null;
+            const url = "{{ route('owner.produk.daftar-produk.getProductsDatabase') }}"
+            await $.ajax({
+                url,
+                headers: {
+                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    sku: value
+                },
+                type: 'GET',
+                success: function(data) {
+                    if (data.status == 'error') {
+                        $('#messageErrorSearch').text(data.msg)
+                        $('#messageSuccessSearch').text('')
+                        return;
+                    }
+                    $('#messageErrorSearch').text('')
+                    $('#messageSuccessSearch').text(`${data.msg}. Total Data ${data.jmlData}`)
+                    dataProducts = data.data;
+                },
+                error: function(error) {
+                    console.error(error);
+                }
+            })
+
+            const defaultOpt = `<option value="" disabled selected>Pilih...</option>`;
+            const optProduk = dataProducts.map((produk) => {
+                return `<option value="${produk.sku}">${produk.name} - ${produk.category || 'No Kategori'} - ${produk.brand || 'No Brand'}</option>`
+            })
+            $('#resultSearch').html(`${defaultOpt}${optProduk}`)
+        })
+
+        $('#resultSearch').on('change', async function() {
+            const value = $(this).val();
+            const url = "{{ route('owner.produk.daftar-produk.getOneProductsDatabase') }}"
+            let product = null;
+            await $.ajax({
+                url,
+                headers: {
+                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    sku: value
+                },
+                type: 'GET',
+                success: function(data) {
+                    product = data.data;
+                    $('#name').unbind('change')
+                },
+                error: function(error) {
+                    console.error(error);
+                }
+            })
+            $('#category').append(`<option value="${product.category}" selected>${product.category}</option>`)
+            $('#brand').append(`<option value="${product.brand}" selected>${product.brand}</option>`)
+            $('#name').val(product.name)
+            $('#sku').val(product.sku)
+            console.log(product);
         })
     </script>
 @endsection

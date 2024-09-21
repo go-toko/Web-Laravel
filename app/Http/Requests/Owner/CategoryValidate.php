@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Owner;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
 
 class CategoryValidate extends FormRequest
@@ -29,12 +28,10 @@ class CategoryValidate extends FormRequest
         if (Route::is('owner.produk.kategori.store')) {
             return [
                 'name' => 'required',
-                'code' => 'required|unique:products_category,code', // . Crypt::decrypt($this->id),
             ];
         } elseif (Route::is('owner.produk.kategori.update')) {
             return [
                 'name' => 'required',
-                'code' => 'required|unique:products_category,code,' . Crypt::decrypt($this->id),
             ];
         }
     }

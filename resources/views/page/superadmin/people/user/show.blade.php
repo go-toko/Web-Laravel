@@ -161,10 +161,11 @@
                                             <div class="profile-top">
                                                 <div class="profile-content">
                                                     <div class="profile-contentimg">
-                                                        <img src="{{ isset($shop->logo)?$shop->logo:asset('images/noimage.png') }}" alt="img" id="blah">
+                                                        <img src="{{ isset($shop->logo) ? $shop->logo : asset('images/noimage.png') }}"
+                                                            alt="img" id="blah">
                                                         <div class="profileupload">
                                                             <img type="file" id="imgInp" name="picture"
-                                                                value="{{ isset($shop->logo)?$shop->logo:asset('images/noimage.png') }}">
+                                                                value="{{ isset($shop->logo) ? $shop->logo : asset('images/noimage.png') }}">
                                                         </div>
                                                     </div>
                                                     <div class="profile-contentname">
@@ -224,8 +225,8 @@
                                                                 <td>
                                                                     <a href="javascript:void(0);">{{ $item->name }}</a>
                                                                 </td>
-                                                                <td>{{ $item->brand->name }}</td>
-                                                                <td>{{ $item->category->name }}</td>
+                                                                <td>{{ $item->brand->name ?? '' }}</td>
+                                                                <td>{{ $item->category->name ?? '' }}</td>
                                                             </tr>
                                                         @endforeach
 
@@ -349,18 +350,18 @@
                                                             </thead>
                                                             <tbody>
                                                                 ${toko.product.map(produk => `
-                                                                                <tr>
-                                                                                    <td>
-                                                                                        <a
-                                                                                            href="javascript:void(0);">${produk.sku.substring(0,5) + '...'}</a>
-                                                                                    </td>
-                                                                                    <td>
-                                                                                        <a href="javascript:void(0);">${produk.name}</a>
-                                                                                    </td>
-                                                                                    <td>${produk.brand.name}</td>
-                                                                                    <td>${produk.category.name}</td>
-                                                                                </tr>
-                                                                                `).join('')}
+                                                                                            <tr>
+                                                                                                <td>
+                                                                                                    <a
+                                                                                                        href="javascript:void(0);">${produk.sku.substring(0,5) + '...'}</a>
+                                                                                                </td>
+                                                                                                <td>
+                                                                                                    <a href="javascript:void(0);">${produk.name}</a>
+                                                                                                </td>
+                                                                                                <td>${produk.brand.name}</td>
+                                                                                                <td>${produk.category.name}</td>
+                                                                                            </tr>
+                                                                                            `).join('')}
 
                                                             </tbody>
                                                         </table>

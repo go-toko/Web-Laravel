@@ -247,7 +247,7 @@ $msg = Session::get($type);
                                         </div>
                                         <div class="col-lg-2 col-sm-6 col-12">
                                             <div class="form-group">
-                                                <label>Harga Beli</label>
+                                                <label>Harga Jual Terbaru</label>
                                                 <input id="price_sell[${index}]" name="price_sell[${index}]" type="text"
                                                     class="form-control formatRupiah"
                                                     value="${detail.product.price_sell}">

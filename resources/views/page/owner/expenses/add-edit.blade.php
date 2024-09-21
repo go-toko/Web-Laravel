@@ -64,7 +64,7 @@
                                                 <input id="date" name="date" type="text"
                                                     placeholder="Pilih Tanggal"
                                                     class="datetimepicker form-control @error('date') is-invalid @enderror"
-                                                    value="{{ old('date') ?? (isset($data->date) ? Carbon\Carbon::createFromFormat('Y-m-d', $data->date)->format('d-m-Y') : null) }}"
+                                                    value="{{ old('date') ?? (isset($data->date) ? Carbon\Carbon::createFromFormat('Y-m-d', $data->date)->format('d-m-Y') : Carbon\Carbon::now()->format('d-m-Y')) }}"
                                                     required>
                                                 <div class="addonset">
                                                     <img src="{{ URL::asset('assets/img/icons/calendars.svg') }}"
@@ -106,6 +106,24 @@
                                         </div>
                                     </div>
                                     <div class="col-lg-12">
+                                        <div class="form-group">
+                                            <label>Nota Pengeluaran</label>
+                                            <div class="image-upload mb-0">
+                                                <input id="imageUpload" name="image" type="file"
+                                                    class="form-control @error('image') is-invalid @enderror">
+                                                <div class="image-uploads">
+                                                    <img src="{{ URL::asset('assets/img/icons/upload.svg') }}"
+                                                        alt="img">
+                                                    <h4 id="imgNameUpload">Seret dan jatuhkan file untuk diunggah</h4>
+                                                </div>
+                                            </div>
+                                            <div class="text-danger">Ukuran file maximal 2MB (2048KB)</div>
+                                            @error('image')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-12">
                                         <button type="submit" class="btn btn-submit me-2">Kirim</button>
                                         <a href="{{ route('owner.pengeluaran.pengeluaran.index') }}"
                                             class="btn btn-cancel">Batal</a>
@@ -137,6 +155,14 @@ $msg = Session::get($type);
             toastr[type](msg, title)
         </script>
     @endif
+    <script type="text/javascript">
+        const input = document.getElementById('imageUpload');
+        const name = document.getElementById('imgNameUpload');
+        input.addEventListener('change', function() {
+            const file = input.files[0];
+            name.textContent = file.name;
+        });
+    </script>
     <script>
         $(window).ready(function() {
             $('.select').select2();

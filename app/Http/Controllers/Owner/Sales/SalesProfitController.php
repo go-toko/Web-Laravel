@@ -8,6 +8,8 @@ use App\Models\ShopModel;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Session;
 
 class SalesProfitController extends Controller
 {
@@ -19,7 +21,10 @@ class SalesProfitController extends Controller
     public function index()
     {
         $shops = ShopModel::where(['user_id' => Auth::user()->id, 'isActive' => true])->select('name', 'id')->get();
-        $latest_shop_id = ShopModel::where('user_id', Auth::user()->id)->latest()->first()->id;
+        $latest_shop_id = ShopModel::where(['user_id' => Auth::user()->id, 'isActive' => true])->get()->sortByDesc('created_at')->first()->id;
+        if (Session::has('active')) {
+            $latest_shop_id = Crypt::decrypt(Session::get('active'));
+        }
         return view('page.owner.sales-profit.index', [
             'shops' => $shops,
             'latest_shop_id' => $latest_shop_id,

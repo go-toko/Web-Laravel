@@ -17,9 +17,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('shop_id')->nullable();
             $table->string('name');
-            $table->string('code')->unique();
             $table->string('description')->nullable();
-            $table->string('images')->nullable();
             $table->boolean('isActive')->default(true);
             $table->boolean('isParent')->default(false);
             $table->timestamps();
@@ -32,7 +30,6 @@ return new class extends Migration
             $table->unsignedBigInteger('shop_id')->nullable();
             $table->string('name');
             $table->string('description')->nullable();
-            $table->string('images')->nullable();
             $table->boolean('isActive')->default(true);
             $table->boolean('isParent')->default(false);
             $table->timestamps();
@@ -69,8 +66,8 @@ return new class extends Migration
      */
     public function down()
     {
+        Schema::dropIfExists('products');
         Schema::dropIfExists('products_category');
         Schema::dropIfExists('products_brand');
-        Schema::dropIfExists('products');
     }
 };

@@ -39,10 +39,11 @@
                                 <thead>
                                     <tr>
                                         <th class="col-0">No</th>
-                                        <th class="col-3">Tanggal</th>
-                                        <th class="col-3">Nama Pemasok</th>
+                                        <th class="col-2">Tanggal</th>
+                                        <th class="col-2">Nama Pemasok</th>
                                         <th class="col-2">Total</th>
                                         <th class="col-3">Deskripsi</th>
+                                        <th class="col-2">Status</th>
                                         <th class="col-1">Aksi</th>
                                     </tr>
                                 </thead>
@@ -57,21 +58,36 @@
                                             </td>
                                             <td>{{ 'Rp' . number_format($item->total) }}</td>
                                             <td>{{ $item->description }}</td>
+                                            @php
+                                                $bg = [
+                                                    'bg-lightgrey',
+                                                    'bg-lightyellow',
+                                                    'bg-lightgreen',
+                                                    'bg-lightred',
+                                                ];
+                                            @endphp
+                                            <td><span
+                                                    class="badges {{ in_array($item->status, $status) ? $bg[array_search($item->status, $status)] : '' }}">{{ $item->status }}</span>
+                                            </td>
                                             <td>
                                                 <a class="me-1"
                                                     href="{{ route('owner.produk.restock.detail', ['id' => Crypt::encrypt($item->id)]) }}">
                                                     <img src="{{ URL::asset('assets/img/icons/eye.svg') }}" alt="eye">
                                                 </a>
-                                                <a class="me-1"
-                                                    href="{{ route('owner.produk.restock.edit', ['id' => Crypt::encrypt($item->id)]) }}">
-                                                    <img src="{{ URL::asset('assets/img/icons/edit.svg') }}"
-                                                        alt="img" />
-                                                </a>
-                                                <a class="me-1" id="confirm-delete"
-                                                    data-action="{{ route('owner.produk.restock.delete', ['id' => Crypt::encrypt($item->id)]) }}">
-                                                    <img src="{{ URL::asset('assets/img/icons/delete.svg') }}"
-                                                        alt="img" />
-                                                </a>
+                                                @if ($item->status == 'PROSES')
+                                                    <a class="me-1"
+                                                        href="{{ route('owner.produk.restock.edit', ['id' => Crypt::encrypt($item->id)]) }}">
+                                                        <img src="{{ URL::asset('assets/img/icons/edit.svg') }}"
+                                                            alt="img" />
+                                                    </a>
+                                                @endif
+                                                @if ($item->status != 'SELESAI')
+                                                    <a class="me-1" id="confirm-delete"
+                                                        data-action="{{ route('owner.produk.restock.delete', ['id' => Crypt::encrypt($item->id)]) }}">
+                                                        <img src="{{ URL::asset('assets/img/icons/delete.svg') }}"
+                                                            alt="img" />
+                                                    </a>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach

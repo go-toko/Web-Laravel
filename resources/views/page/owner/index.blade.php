@@ -88,17 +88,17 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <div class="card">
                             <div class="card-header pb-0">
-                                <h5 class="card-title mb-0">Penjualan</h5>
+                                <h5 class="card-title mb-0">Penjualan dan Pengeluaran</h5>
                             </div>
                             <div class="card-body">
                                 <div class="row justify-content-between">
-                                    <div class="col-3" id="monthFieldSale">
+                                    <div class="col-2">
                                         <div class="form-group">
-                                            <select name="monthSale" id="monthSale"
-                                                class="select @error('monthSale') is-invalid @enderror">
+                                            <select name="monthFilter" id="monthFilter"
+                                                class="select @error('monthFilter') is-invalid @enderror">
                                                 @foreach ($months as $index => $month)
                                                     <option value="{{ $index + 1 }}"
                                                         @if ($monthNow == $index + 1) selected @endif>
@@ -108,17 +108,15 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-3">
-                                        <div class="form-group text-end">
-                                            <div class="btn btn-primary" id="moreSale">Selengkapnya</div>
-                                        </div>
-                                    </div>
                                 </div>
-                                <div id="sale-chart"></div>
+                                <div class="row justify-content-between">
+                                    <div id="sale-chart" class="col-md-6"></div>
+                                    <div id="expense-chart" class="col-md-6"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    {{-- <div class="col-md-6">
                         <div class="card">
                             <div class="card-header pb-0">
                                 <h5 class="card-title mb-0">Pengeluaran</h5>
@@ -147,12 +145,35 @@
                                 <div id="expense-chart"></div>
                             </div>
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
             @else
                 <div class="row">
                     <div class="col-12">
                         <section class="comp-section">
+                            <div class="row d-flex">
+                                <div class="col-3">
+                                    <div class="form-group">
+                                        <label>Search</label>
+                                        <input id="search" name="search" type="text"
+                                            class="form-control @error('search') is-invalid @enderror"
+                                            value="{{ request()->get('search') ?? null }}" autofocus
+                                            placeholder="Masukkan nama toko">
+                                        @error('search')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-3" style="margin-top: 27px">
+                                    <div class="form-group d-flex align-items-center gap-3">
+                                        <a class="btn btn-filters" id="filter"><img
+                                                src="{{ URL::asset('assets/img/icons/search-whites.svg') }}" alt="img"
+                                                data-bs-toggle="tooltip" title="Filter"></a>
+                                        <a class="btn btn-filters" id="resetFilter"><i class="fa fa-undo"
+                                                data-bs-toggle="tooltip" title="Reset Filter"></i></a>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="row d-flex">
                                 @foreach ($shops as $shop)
                                     <div class="col-sm-12 col-md-6 col-lg-4">
@@ -281,7 +302,7 @@ $msg = Session::get($type);
         async function showDataMonthExpense() {
             let dataExpense;
             const url =
-                `{{ route('owner.getExpenses') }}?month=${$('#monthExpense').val()}`
+                `{{ route('owner.getExpenses') }}?month=${$('#monthFilter').val()}`
             await $.ajax({
                 url,
                 headers: {
@@ -300,10 +321,6 @@ $msg = Session::get($type);
                 runChartExpense(dataY, dataX, undefined, 'Tanggal')
             }, 250);
         }
-
-        $(document).on('change', '#monthExpense', async function() {
-            await showDataMonthExpense();
-        })
     </script>
 
     {{-- script statistic sale --}}
@@ -367,7 +384,7 @@ $msg = Session::get($type);
         async function showDataMonthSale() {
             let dataSale;
             const url =
-                `{{ route('owner.getSales') }}?month=${$('#monthSale').val()}`
+                `{{ route('owner.getSales') }}?month=${$('#monthFilter').val()}`
             await $.ajax({
                 url,
                 headers: {
@@ -387,17 +404,15 @@ $msg = Session::get($type);
             }, 250);
         }
 
-        $(document).on('change', '#monthSale', async function() {
-            await showDataMonthSale();
+        $(document).on('change', '#monthFilter', async function() {
+            try {
+                showDataMonthSale();
+                showDataMonthExpense();
+            } catch (error) {
+                console.log(error);
+            }
         })
     </script>
-
-    <script>
-        $(document).on('click', '#moreExpense', function() {
-            window.location.href = `{{ route('owner.pengeluaran.statistik.index') }}`
-        })
-    </script>
-
     @if (Session::has('active'))
         <script>
             $(document).ready(async function() {
@@ -410,4 +425,17 @@ $msg = Session::get($type);
             })
         </script>
     @endif
+
+    <script>
+        $(document).on('click', '#filter', function() {
+            const searchToko = $('#search').val() ?? undefined;
+
+            const url = `{{ route('owner.dashboard') }}?search=${searchToko}`
+            window.location.href = url;
+        })
+        $(document).on('click', '#resetFilter', function() {
+            const url = `{{ route('owner.dashboard') }}`
+            window.location.href = url;
+        })
+    </script>
 @endsection

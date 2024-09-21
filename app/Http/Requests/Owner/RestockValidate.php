@@ -29,6 +29,7 @@ class RestockValidate extends FormRequest
             'quantity.*' => 'required|numeric|gt:0',
             'product.*' => 'required',
             'price_buy.*' => 'required',
+            'price_sell.*' => 'required',
         ];
     }
 }

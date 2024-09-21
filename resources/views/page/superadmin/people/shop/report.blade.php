@@ -92,7 +92,7 @@
                     <td>
                         {{ $item?->address ? $item->address . ', ' . $item->village . ', ' . $item->district . ', ' . $item->regency . ', ' . $item->province : $item->village . ', ' . $item->district . ', ' . $item->regency . ', ' . $item->province }}
                     </td>
-                    <td>{{ $item->isActive?'Aktif':'Tidak Aktif' }}</td>
+                    <td>{{ $item->isActive ? 'Aktif' : 'Tidak Aktif' }}</td>
                     <td>{{ Carbon\Carbon::parse($item->created_at)->format('d M Y') }}</td>
                     <td>{{ Carbon\Carbon::parse($item->updated_at)->format('d M Y') }}</td>
                 </tr>

@@ -38,7 +38,8 @@
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-12 col-lg-3 col-md-3">
-                                        <div class="form-group" id="startDateField">
+                                        <label for="">Tanggal Pelaksanaan Pengeluaran</label>
+                                        <div class="form-group mt-1" id="startDateField">
                                             <div class="input-groupicon">
                                                 <input id="startDate" name="startDate" type="text"
                                                     placeholder="Pilih Tanggal Awal"
@@ -56,7 +57,8 @@
                                         </div>
                                     </div>
                                     <div class="col-12 col-lg-3 col-md-3">
-                                        <div class="form-group">
+                                        <label for=""></label>
+                                        <div class="form-group mt-1">
                                             <div class="input-groupicon">
                                                 <input id="endDate" name="endDate" type="text"
                                                     placeholder="Pilih Tanggal Akhir"
@@ -72,16 +74,22 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-12 col-lg-3 col-md-3 offset-lg-3 offset-md-3">
-                                        <div class="form-group d-flex align-items-center gap-3">
-                                            <a class="btn btn-filters ms-auto" id="filter"><img
+                                    <div class="col-12 col-lg-3 col-md-3">
+                                        <label for=""></label>
+                                        <div class="form-group d-flex align-items-center gap-3 mt-1">
+                                            <a class="btn btn-filters" id="filter"><img
                                                     src="{{ URL::asset('assets/img/icons/search-whites.svg') }}"
                                                     alt="img" data-bs-toggle="tooltip" title="Filter"></a>
                                             <a class="btn btn-filters" id="resetFilter"><i class="fa fa-undo"
                                                     data-bs-toggle="tooltip" title="Reset Filter"></i></a>
-                                            <a data-bs-toggle="tooltip" data-bs-placement="top" title="PDF"
-                                                id="reportPdf"><img src="{{ URL::asset('assets/img/icons/pdf.svg') }}"
-                                                    alt="img"></a>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-lg-3 col-md-3">
+                                        <label for=""></label>
+                                        <div class="form-group d-flex align-items-center gap-3 mt-3">
+                                            <a class="ms-auto" data-bs-toggle="tooltip" data-bs-placement="top"
+                                                title="PDF" id="reportPdf"><img
+                                                    src="{{ URL::asset('assets/img/icons/pdf.svg') }}" alt="img"></a>
                                             <a data-bs-toggle="tooltip" data-bs-placement="top" title="Excel"
                                                 id="reportExcel"><img src="{{ URL::asset('assets/img/icons/excel.svg') }}"
                                                     alt="img"></a>
@@ -92,10 +100,11 @@
                                     <table class="table datanew">
                                         <thead>
                                             <tr>
-                                                <th class="col-3">Pengeluaran Untuk</th>
+                                                <th class="col-2">Pengeluaran Untuk</th>
                                                 <th class="col-3">Deskripsi</th>
                                                 <th class="col-2">Kategori</th>
                                                 <th class="col-1">Jumlah</th>
+                                                <th class="col-1">Status</th>
                                                 <th class="col-2">Tanggal Pelaksanaan</th>
                                                 <th class="col-1">Aksi</th>
                                             </tr>
@@ -110,24 +119,66 @@
                                                     <td>{{ Str::title($expense->category->name) }}</td>
                                                     {{-- DONE: Implement amount format for Rupiah --}}
                                                     <td>{{ 'Rp' . number_format($expense->amount) }}</td>
+                                                    @php
+                                                        $bg = ['bg-lightyellow', 'bg-lightgreen', 'bg-lightred'];
+                                                    @endphp
+                                                    <td><span
+                                                            class="badges {{ in_array($expense->status, $status) ? $bg[array_search($expense->status, $status)] : '' }}">{{ $expense->status }}</span>
+                                                    </td>
                                                     <td>{{ Carbon\Carbon::create($expense->date)->translatedFormat('d F Y') }}
                                                     </td>
                                                     <td>
-                                                        <a class="me-3"
-                                                            href="{{ route('owner.pengeluaran.pengeluaran.edit', ['id' => Crypt::encrypt($expense->id)]) }}">
-                                                            <img src="{{ URL::asset('assets/img/icons/edit.svg') }}"
-                                                                alt="img" />
+                                                        <a class="me-1"
+                                                            href="{{ route('owner.pengeluaran.pengeluaran.detail', ['id' => Crypt::encrypt($expense->id)]) }}">
+                                                            <img src="{{ URL::asset('assets/img/icons/eye.svg') }}"
+                                                                alt="eye">
                                                         </a>
-                                                        <a class="me-3" id="confirm-delete"
-                                                            data-action="{{ route('owner.pengeluaran.pengeluaran.delete', ['id' => Crypt::encrypt($expense->id)]) }}">
-                                                            <img src="{{ URL::asset('assets/img/icons/delete.svg') }}"
-                                                                alt="img" />
-                                                        </a>
+                                                        @if ($expense->status != 'SELESAI')
+                                                            @if ($expense->status != 'BATAL')
+                                                                <a class="me-1"
+                                                                    href="{{ route('owner.pengeluaran.pengeluaran.edit', ['id' => Crypt::encrypt($expense->id)]) }}">
+                                                                    <img src="{{ URL::asset('assets/img/icons/edit.svg') }}"
+                                                                        alt="img" />
+                                                                </a>
+                                                            @endif
+                                                            <a class="me-1" id="confirm-delete"
+                                                                data-action="{{ route('owner.pengeluaran.pengeluaran.delete', ['id' => Crypt::encrypt($expense->id)]) }}">
+                                                                <img src="{{ URL::asset('assets/img/icons/delete.svg') }}"
+                                                                    alt="img" />
+                                                            </a>
+                                                        @endif
                                                     </td>
                                                 </tr>
                                             @endforeach
                                         </tbody>
                                     </table>
+                                </div>
+                                <div class="row mt-1">
+                                    <div class="col-3">Total Seluruh Pengeluaran :
+                                        Rp{{ number_format($expenses->sum('amount'), 0, ',', '.') }}</div>
+                                    @php
+                                        $totalProses = $expenses->map(function ($data) {
+                                            if ($data->status == 'PROSES') {
+                                                return $data;
+                                            }
+                                        });
+                                        $totalBatal = $expenses->map(function ($data) {
+                                            if ($data->status == 'BATAL') {
+                                                return $data;
+                                            }
+                                        });
+                                        $totalSelesai = $expenses->map(function ($data) {
+                                            if ($data->status == 'SELESAI') {
+                                                return $data;
+                                            }
+                                        });
+                                    @endphp
+                                    <div class="col-3">Total Pengeluaran Diproses :
+                                        Rp{{ number_format($totalProses->sum('amount'), 0, ',', '.') }}</div>
+                                    <div class="col-3">Total Pengeluaran Batal :
+                                        Rp{{ number_format($totalBatal->sum('amount'), 0, ',', '.') }}</div>
+                                    <div class="col-3">Total Pengeluaran Selesai :
+                                        Rp{{ number_format($totalSelesai->sum('amount'), 0, ',', '.') }}</div>
                                 </div>
                             </div>
                         </div>
